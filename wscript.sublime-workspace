@@ -1,0 +1,232 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"neigh",
+				"neighborMainAddr"
+			],
+			[
+				"SetPare",
+				"SetParentAddress"
+			],
+			[
+				"SetDioIn",
+				"SetDioIntervalMin"
+			],
+			[
+				"m_dioi",
+				"m_dioIntervalDoublings"
+			],
+			[
+				"SetDioInt",
+				"SetDioIntervalMin"
+			],
+			[
+				"RplCo",
+				"RplControlMessage"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/joshu/Documents/2nd Sem 16-17/CoE113/CoE113_lab3/rf.v",
+		"/home/joshu/Documents/2nd Sem 16-17/CoE113/CoE113_lab2/single_cycle_mips_mapped.v",
+		"/home/joshu/Documents/2nd Sem 16-17/CoE113/CoE113_lab3/alu.v",
+		"/home/joshu/Documents/2nd Sem 16-17/CoE113/CoE113_lab3/single_cycle_mips.v",
+		"/home/joshu/Documents/2nd Sem 16-17/CoE113/CoE113_lab3/Hope.v",
+		"/home/joshu/Downloads/single_cycle_mips.v",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/rpl/helper/rpl-helper.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/aodv/helper/aodv-helper.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/internet/helper/ripng-helper.cc",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/scratch/rpl-simple.cc",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/examples/ipv6/wsn-ping6.cc",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/scratch/ripng-simple-network.cc",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/internet/helper/ipv6-routing-helper.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/internet/helper/ripng-helper.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/internet/model/ripng.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/internet/model/ripng.cc",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/internet/model/ripng-header.cc",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/internet/model/rip-header.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/olsr/helper/olsr-helper.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/olsr/helper/olsr-helper.cc",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/aodv/helper/aodv-helper.cc",
+		"/home/joshu/Documents/RPL.sublime-workspace",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/rpl/model/rpl-header.h",
+		"/home/joshu/Documents/CoE 198/Study/patch38960045_90001/b/src/internet/model/ripng-header.h",
+		"/home/joshu/Documents/CNLComputerIP.txt",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/rpl/model/rplheader.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/rpl/model/rplheader2.cpp",
+		"/home/joshu/Documents/CoE 198/Study/patch38960045_90001/b/src/internet/model/ripng.h",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/rpl/model/daopacket.h",
+		"/home/joshu/Documents/ResumeStuff",
+		"/home/joshu/Documents/Bake/bake/bakeconf.xml",
+		"/home/joshu/Documents/Bake/bake/source/ns-3.26/src/rpl/model/daopacket.cc",
+		"/home/joshu/Documents/gccxml-gcc5.patch"
+	],
+	"find":
+	{
+		"height": 38.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"wr_data",
+			"data_wr",
+			"mips",
+			"regfile",
+			"rf",
+			"m_initi",
+			"schedule",
+			"option ",
+			"option length",
+			"module name=\"gc",
+			"diff "
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 30.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": false,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "wscript.sublime-project",
+	"replace":
+	{
+		"height": 56.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
