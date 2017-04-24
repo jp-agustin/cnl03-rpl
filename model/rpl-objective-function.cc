@@ -1,4 +1,4 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+	/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  *
  * This program is free software; you can redistribute it and/or modify
@@ -68,5 +68,27 @@ uint16_t RplObjectiveFunctionOf0::ComputeRank (uint16_t parentRank)
 
   return m_rank;
 }
+
+
+RplObjectiveFunctionMhrof::RplObjectiveFunctionMhrof (void)
+{
+}
+
+RplObjectiveFunctionMhrof::~RplObjectiveFunctionMhrof ()
+{
+}
+
+//Default, ETX is used.
+uint16_t RplObjectiveFunctionMhrof::ComputeRank (uint16_t parentRank)
+{
+  return parentRank;
+}
+
+/*
+uint16_t RplObjectiveFunctionMhrof::ComputeRank (uint16_t parentRank, Metric)
+{
+  return m_rank;
+}
+*/
 
 }

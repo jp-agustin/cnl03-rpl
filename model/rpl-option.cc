@@ -1050,4 +1050,218 @@ uint32_t RplSolicitedInformationOption::Deserialize (Buffer::Iterator start)
   return GetSerializedSize ();
 }
 
+
+NS_OBJECT_ENSURE_REGISTERED (RplMetricContainerOption);
+
+
+RplMetricContainerOption::RplMetricContainerOption ()
+{
+  NS_LOG_FUNCTION (this);
+  SetRoutingMcType (0);
+  SetResFlags(0);
+  SetFlagP(0);
+  SetFlagR(0);
+  SetFlagC(0);
+  SetFlagO(0);
+  SetFlagA(0);
+  SetFlagPrec(0);
+  SetLength(0);
+}
+
+RplMetricContainerOption::~RplMetricContainerOption ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+TypeId RplMetricContainerOption::GetTypeId ()
+{
+  static TypeId tid = TypeId ("ns3::RplMetricContainerOption")
+    .SetParent<Icmpv6OptionHeader> ()
+    .SetGroupName ("Rpl")
+    .AddConstructor<RplMetricContainerOption> ()
+  ;
+  return tid;
+}
+
+TypeId RplMetricContainerOption::GetInstanceTypeId () const
+{
+  NS_LOG_FUNCTION (this);
+  return GetTypeId ();
+}
+
+uint8_t RplMetricContainerOption::GetRoutingMcType () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_routingMcType;
+}
+void RplMetricContainerOption::SetRoutingMcType (uint8_t routeType)
+{
+  NS_LOG_FUNCTION (this << routeType);
+  m_routingMcType = routeType;
+}
+
+uint16_t RplMetricContainerOption::GetResFlags () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_resFlags;
+}
+
+void RplMetricContainerOption::SetResFlags (uint16_t flags)
+{
+  NS_LOG_FUNCTION (this << flags);
+  m_resFlags = flags;
+}
+
+bool RplMetricContainerOption::GetFlagP () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_flagP;
+}
+
+void RplMetricContainerOption::SetFlagP (bool p)
+{
+  NS_LOG_FUNCTION (this << p);
+  m_flagP = p;
+}
+
+bool RplMetricContainerOption::GetFlagC () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_flagC;
+}
+
+void RplMetricContainerOption::SetFlagC (bool c)
+{
+  NS_LOG_FUNCTION (this << c);
+  m_flagC = c;
+}
+
+bool RplMetricContainerOption::GetFlagO () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_flagO;
+}
+
+void RplMetricContainerOption::SetFlagO (bool o)
+{
+  NS_LOG_FUNCTION (this << o);
+  m_flagO = o;
+}
+
+bool RplMetricContainerOption::GetFlagR () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_flagR;
+}
+
+void RplMetricContainerOption::SetFlagR (bool r)
+{
+  NS_LOG_FUNCTION (this << r);
+  m_flagR = r;
+}
+
+uint8_t RplMetricContainerOption::GetFlagA () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_flagA;
+}
+
+void RplMetricContainerOption::SetFlagA (uint8_t a)  
+{
+  NS_LOG_FUNCTION (this << a);
+  m_flagA = a;
+}
+
+uint8_t RplMetricContainerOption::GetFlagPrec () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_flagPrec;
+}
+
+void RplMetricContainerOption::SetFlagPrec (uint8_t prec) 
+{
+  NS_LOG_FUNCTION (this << prec);
+  m_flagPrec = prec;
+}
+
+uint8_t RplMetricContainerOption::GetLength () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_length;
+}
+
+void RplMetricContainerOption::SetLength (uint8_t length)
+{
+  NS_LOG_FUNCTION (this << length);
+  m_length = length;
+}
+
+void RplMetricContainerOption::Print (std::ostream& os) const{}
+
+  /**
+   * \brief Get the serialized size.
+   * \return serialized size
+   */
+uint32_t RplMetricContainerOption::GetSerializedSize () const
+{
+  NS_LOG_FUNCTION (this);
+  return 4 + m_length;
+}
+
+
+void RplMetricContainerOption::Serialize (Buffer::Iterator start) const
+{
+  NS_LOG_FUNCTION (this << &start);
+  Buffer::Iterator i = start;
+  uint16_t flags = 0;
+
+  if (m_flagP)
+    {
+      flags |= (uint16_t)(1 << 15);
+    }
+
+  if (m_flagC)
+    {
+      flags |= (uint16_t)(1 << 14);
+    }
+
+  if (m_flagO)
+    {
+      flags |= (uint16_t)(1 << 13);
+    }
+
+  if (m_flagR)
+    {
+      flags |= (uint16_t)(1 << 12);
+    }
+
+  if (m_flagA)
+    {
+      flags |= (uint16_t)(m_flagA << 9);
+    }
+
+  if (m_flagPrec)
+    {
+      flags |= (uint16_t)(m_flagPrec << 5);
+    }
+  
+
+  i.WriteU8 (m_routingMcType); 
+  i.WriteU16 (flags);
+  i.WriteU8 (m_length);
+}
+
+uint32_t RplMetricContainerOption::Deserialize (Buffer::Iterator start)
+{
+  NS_LOG_FUNCTION (this << &start);
+  Buffer::Iterator i = start;
+
+  m_routingMcType = i.ReadU8 ();
+  m_resFlags = i.ReadU16 ();
+  m_length = i.ReadU8 ();
+
+  return GetSerializedSize ();
+}
+
+
 }

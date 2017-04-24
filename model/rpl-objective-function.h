@@ -69,5 +69,26 @@ public:
 
 };
 
+class RplObjectiveFunctionMhrof : public RplObjectiveFunction
+{
+public:                                                                                                   
+  /**
+   * \brief Constructor.
+   */
+  RplObjectiveFunctionMhrof (void);
+
+  /**
+   * \brief Destructor.
+   */
+  ~RplObjectiveFunctionMhrof ();
+  
+  /**
+   * \brief Compute the rank
+   * \param parentRank the rank of the preferred parent
+   */
+  static uint16_t ComputeRank (uint16_t parentRank);
+
+};
+
 }
 #endif /* RPL_OBJECTIVE_FUNCTION_H */

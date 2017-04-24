@@ -3,7 +3,7 @@
 #include "ns3/ipv6-routing-protocol.h"
 #include "ns3/ipv6-interface.h"
 #include "rpl-neighbor.h"
-#include "rpl-neighborset.h"
+#include "rpl-neighborset.h"  
 #include "ns3/log.h"
 #include <ostream>
 
@@ -142,7 +142,11 @@ Ptr<Neighbor> RplNeighborSet::SelectParent(uint16_t rank)
 Ipv6Address RplNeighborSet::GetParent()
 {
   NS_LOG_FUNCTION (this);
- return m_prefParent->GetNeighborAddress();
+  if (m_prefParent != NULL)
+  {
+    return m_prefParent->GetNeighborAddress();
+  }
+  return "::";
 } 
 
 }

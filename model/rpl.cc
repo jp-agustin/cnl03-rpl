@@ -46,7 +46,7 @@
 
 #define MOP 0
 #define OCP 0
-#define trickle 0
+#define trickle 1
 
 #include <iostream>
 #include "ns3/log.h"
@@ -284,7 +284,7 @@ bool Rpl::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const N
 void Rpl::Receive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-  //std::cout <<"Entering Receive." <<std::endl;
+//  std::cout <<"Entering Receive." <<std::endl;
   
   Address sender;
   Ptr<Packet> packet = socket->RecvFrom (sender);
@@ -293,6 +293,8 @@ void Rpl::Receive (Ptr<Socket> socket)
   Ipv6Address senderAddress = senderAddr.GetIpv6 ();
   uint16_t senderPort = senderAddr.GetPort ();
 
+//  std::cout <<"Sender Address is " << senderAddress << ", " << senderAddr << std::endl;
+//  std::cout <<"Node Address is " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
   Ipv6PacketInfoTag interfaceInfo;
   if (!packet->RemovePacketTag (interfaceInfo))
     {
@@ -308,13 +310,14 @@ void Rpl::Receive (Ptr<Socket> socket)
   if (interfaceForAddress != -1)
     {
       NS_LOG_LOGIC ("Ignoring a packet sent by myself.");
+      std::cout << "Got packet from myself." << std::endl;
       return;
     }
 
   Icmpv6Header rplMessage;
   packet->RemoveHeader (rplMessage);
   //std::cout << rplMessage << std::endl << "Code is: " << (uint32_t)rplMessage.GetCode() << std::endl;
-  
+ 
   if (rplMessage.GetType () == 155)
     {
       if ( (uint32_t)rplMessage.GetCode () == 0) 
@@ -393,7 +396,7 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
       if (dioMessage.GetRank() < m_routingTable.GetRank() || m_routingTable.GetRank () == 0)
        {
         m_routingTable.ClearRoutingTable ();
-        //m_neighborSet.ClearNeighborSet ();
+        m_neighborSet.ClearNeighborSet ();
         
         m_routingTable.SetRplInstanceId (dioMessage.GetRplInstanceId ());
         m_routingTable.SetDodagId (dioMessage.GetDodagId ());
@@ -421,12 +424,15 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
         }
     }
 
-  InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
-  m_neighborSet.SelectParent (m_routingTable.GetRank());
-  std::cout << "Parent is " << m_neighborSet.GetParent() << std::endl;
+  if (!m_neighborSet.FindNeighbor(senderAddress))
+    {
+      InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
+      m_neighborSet.SelectParent (m_routingTable.GetRank());
+      std::cout << "Parent is " << m_neighborSet.GetParent() << std::endl;
 
-  //non storing mode
-  m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
+      //non storing mode
+      m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
+    }
   
   std::cout << "DODAG ID (after recv DIS): " << m_routingTable.GetDodagId () << "\n";
   std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;

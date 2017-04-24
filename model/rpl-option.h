@@ -971,7 +971,7 @@ private:
   |                                                               |
   +                                                               +
   |                                                               |
-  +                            DODAGID                              +
+  +                            DODAGID                            +
   |                                                               |
   +                                                               +
   |                                                               |
@@ -1152,6 +1152,234 @@ private:
    */
   Ipv6Address m_dodagId;
 
+};
+
+/**
+ * \ingroup rpl
+ *
+ * \brief RPL Solicited Information Option
+ */
+
+/*
+*  \brief (RPL Solicited Information Option) Format
+   \verbatim
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |Routing-MC-Type|Res Flags|P|C|O|R| A | Prec  | Length (bytes)  |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                                                               |
+  //                        (object body)                        //
+  |                                                               |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  \endverbatim
+ */
+
+class RplMetricContainerOption : public Icmpv6OptionHeader
+{
+public:
+  /**
+   * \brief Constructor.
+   */
+
+  RplMetricContainerOption ();
+
+  /**
+   * \brief Destructor.
+   */
+  virtual ~RplMetricContainerOption ();
+
+  /**
+   * \brief Get the UID of this class.
+   * \return UID
+   */
+  static TypeId GetTypeId ();
+
+  /**
+   * \brief Get the instance type ID.
+   * \return instance type ID
+   */
+  virtual TypeId GetInstanceTypeId () const;
+
+  /**
+   * \brief Get rpl metric container type.
+   * \return the rpl metric container type value
+   */
+  uint8_t GetRoutingMcType () const;
+
+  /**
+   * \brief Set rpl metric container type.
+   * \param routeType the rpl metric container type value
+   */
+  void SetRoutingMcType (uint8_t routeType);  
+
+  /**
+   * \brief Get the res flags field.
+   * \return the res flags value
+   */
+  uint16_t GetResFlags () const;
+
+  /**
+   * \brief Set the res flags field.
+   * \param flags the res flags value
+   */
+  void SetResFlags (uint16_t flags);
+
+  /**
+   * \brief Get the p flag.
+   * \return p flag
+   */
+  bool GetFlagP () const;
+
+  /**
+   * \brief Set the p flag.
+   * \param p value
+   */
+  void SetFlagP (bool p);
+
+  /**
+   * \brief Get the c flag.
+   * \return c flag
+   */
+  bool GetFlagC () const;
+
+  /**
+   * \brief Set the c flag.
+   * \param c value
+   */
+  void SetFlagC (bool c);
+
+  /**
+   * \brief Get the o flag.
+   * \return o flag
+   */
+  bool GetFlagO () const;
+
+  /**
+   * \brief Set the o flag.
+   * \param o value
+   */
+  void SetFlagO (bool o);
+
+  /**
+   * \brief Get the r flag.
+   * \return r flag
+   */
+  bool GetFlagR () const;
+
+  /**
+   * \brief Set the r flag.
+   * \param r value
+   */
+  void SetFlagR (bool r);
+
+  /**
+   * \brief Get the a flag.
+   * \return a flag
+   */
+  uint8_t GetFlagA () const;
+
+  /**
+   * \brief Set the a flag.
+   * \param a value
+   */
+  void SetFlagA (uint8_t a);  
+
+  /**
+   * \brief Get the prec flag.
+   * \return prec flag
+   */
+  uint8_t GetFlagPrec () const;
+
+  /**
+   * \brief Set the prec flag.
+   * \param prec value
+   */
+  void SetFlagPrec (uint8_t prec);  
+
+  /**
+   * \brief Get the body length.
+   * \return body length
+   */
+  uint8_t GetLength () const;
+
+  /**
+   * \brief Set the body length
+   * \param length value
+   */
+  void SetLength (uint8_t length);  
+
+  /**
+   * \brief Print informations.
+   * \param os output stream
+   */
+  virtual void Print (std::ostream& os) const;
+
+  /**
+   * \brief Get the serialized size.
+   * \return serialized size
+   */
+  virtual uint32_t GetSerializedSize () const;
+
+  /**
+   * \brief Serialize the packet.
+   * \param start start offset
+   */
+  virtual void Serialize (Buffer::Iterator start) const;
+
+  /**
+   * \brief Deserialize the packet.
+   * \param start start offset
+   * \return length of packet
+   */
+  virtual uint32_t Deserialize (Buffer::Iterator start);
+
+private:
+
+  /**
+   * \brief The routing metric container type.
+   */
+  uint8_t m_routingMcType;
+
+  /**
+   * \brief The res flags field value.
+   */
+  uint16_t m_resFlags;
+
+  /**
+   * \brief The P flag.
+   */
+  bool m_flagP;
+
+  /**
+   * \brief The C flag.
+   */
+  bool m_flagC;
+
+  /**
+   * \brief The O flag.
+   */
+  bool m_flagO;
+
+  /**
+   * \brief The R flag.
+   */
+  bool m_flagR;
+
+  /**
+   * \brief The A flag.
+   */
+  uint8_t m_flagA;
+
+  /**
+   * \brief The prec flag.
+   */
+  uint8_t m_flagPrec;
+
+  /**
+   * \brief The length flag.
+   */
+  uint8_t m_length;
 };
 
 
