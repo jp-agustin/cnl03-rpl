@@ -544,79 +544,6 @@ void Rpl::SendDio (Ipv6Address destAddress, uint32_t incomingInterface, uint16_t
     }
 }
 
-void Rpl::SendDio (Ipv6Address destAddress, uint32_t incomingInterface) 
-{
-  if (m_routingTable.GetVersionNumber () !=0) 
-    {
-      Ptr<Packet> p = Create<Packet>();
-      Ptr<Socket> sendingSocket;
-      SocketIpv6HopLimitTag tag;
-      tag.SetHopLimit (255);
-
-      Icmpv6Header dio;
-      dio.SetType (155);
-      dio.SetCode (1);
-
-      RplDioMessage dioMessage;
-      dioMessage.SetFlagG (m_routingTable.GetFlagG ());
-      dioMessage.SetMop (MOP);
-      dioMessage.SetPrf (0);
-      dioMessage.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
-      dioMessage.SetDtsn (m_routingTable.GetDtsn ());
-      dioMessage.SetVersionNumber (m_routingTable.GetVersionNumber ());
-      dioMessage.SetRank (m_routingTable.GetRank ());
-      dioMessage.SetDodagId (m_routingTable.GetDodagId ());
-      
-      RplDodagConfigurationOption dodagConfiguration;
-      dodagConfiguration.SetPathControlSize (DEFAULT_PATH_CONTROL_SIZE);
-      dodagConfiguration.SetDioIntervalDoublings (DEFAULT_DIO_INTERVAL_DOUBLINGS);
-      dodagConfiguration.SetDioIntervalMin (DEFAULT_DIO_INTERVAL_MIN);
-      dodagConfiguration.SetDioRedundancyConstant (DEFAULT_DIO_REDUNDANCY_CONSTANT);
-      dodagConfiguration.SetMaxRankIncrease (0);
-      dodagConfiguration.SetMinHopRankIncrease (DEFAULT_MIN_HOP_RANK_INCREASE);
-      dodagConfiguration.SetObjectiveCodePoint (OCP);
-      //dodagConfiguration.SetDefaultLifetime ();
-      //dodagConfiguration.SetLifetimeUnit ();
-      
-      p->AddHeader (dodagConfiguration);
-      p->AddHeader (dioMessage);
-      p->AddHeader (dio);
-
-      if (!m_recvSocket) 
-        {
-          NS_LOG_LOGIC ("RPL: adding receiving socket");
-          TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-          Ptr<Node> theNode = GetObject<Node> ();
-          m_recvSocket = Socket::CreateSocket (theNode, tid);
-          Inet6SocketAddress local = Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT);
-          m_recvSocket->Bind (local);
-          m_recvSocket->SetRecvCallback (MakeCallback (&Rpl::Receive, this));
-          m_recvSocket->SetIpv6RecvHopLimit (true);
-          m_recvSocket->SetRecvPktInfo (true);
-        }
-
-      for (SocketListI iter = m_sendSocketList.begin (); iter != m_sendSocketList.end (); iter++ )
-        {
-          if (iter->second == incomingInterface)
-            {
-              sendingSocket = iter->first;
-            }
-          else
-            {
-              sendingSocket = m_recvSocket;
-            }
-        }
-
-      NS_LOG_DEBUG ("SendTo: " << *p);
-
-      sendingSocket->SendTo (p, 0, Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT));
-    }
-  else 
-    {
-      std::cout << "Not yet in DODAG\n";
-    }
-}
-
 void Rpl::SendDio () 
 {
   if (m_routingTable.GetVersionNumber () !=0) 
@@ -681,6 +608,18 @@ void Rpl::SendDio ()
     }
 }
 
+void Rpl::SendDao ()
+{
+  RplDaoMessage daoMessage;
+  RplTargetOption targetOption;
+  RplTransitInformationOption transitInformation;
+
+  daoMessage.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
+  daoMessage.SetDodagId (m_routingTable.GetDodagId ());
+
+  targetOption.SetPrefixLength ();
+  targetOption.SetTargetPrefix (); //Wala pa sa rpl-option file
+}
 
 void Rpl::InsertNeighbor (Ipv6Address neighborAddress, Ipv6Address dodagID, uint8_t dtsn, uint16_t rank, 
                           uint32_t incomingInterface)

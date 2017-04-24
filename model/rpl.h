@@ -112,6 +112,7 @@ public:
    * \brief Send Multicast DIS messages
    */
   void SendMulticastDis ();
+
   /*
    * \brief Send scheduled DIO message
    */
@@ -123,16 +124,7 @@ public:
    * \param senderPort sender port
    * \param incomingInterface incoming interface
    */
-  void SendDio (Ipv6Address destAddress, uint32_t incomingInterface);
-
-  /*
-   * \brief Send DIO message in response to DIS
-   * \param senderAddress sender adress
-   * \param senderPort sender port
-   * \param incomingInterface incoming interface
-   */
   void SendDio (Ipv6Address destAddress, uint32_t incomingInterface, uint16_t senderPort);
-
 
   /*
    * \brief Insert to neighborSet
