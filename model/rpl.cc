@@ -18,8 +18,8 @@
  *          Joshua Jacinto <jhjacinto@up.edu.ph>
  */
 
-#define DEFAULT_DIO_INTERVAL_DOUBLINGS 20
-#define DEFAULT_DIO_INTERVAL_MIN 12
+#define DEFAULT_DIO_INTERVAL_DOUBLINGS 16
+#define DEFAULT_DIO_INTERVAL_MIN 3
 #define DEFAULT_DIO_REDUNDANCY_CONSTANT 10
 
 #define RPL_DEFAULT_INSTANCE 0
@@ -41,14 +41,16 @@
 #define RPL_PORT 521
 #define ROOT_RANK 1 
 #define INFINITE_RANK 0xffff
-//#define ROOT_ADDRESS "2001:1::"
-#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
+#define ROOT_ADDRESS "2001:1::"
+//#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
-#define MOP 0
+#define MOP 1
 #define OCP 0
-#define trickle 1
+#define trickle 0
+#define DAO 1
 
 #include <iostream>
+#include <cmath>
 #include "ns3/log.h"
 #include "ns3/abort.h"
 #include "ns3/assert.h"
@@ -86,11 +88,11 @@ TypeId Rpl::GetTypeId (void)
     .SetGroupName ("Rpl")
     .AddConstructor<Rpl> ()
     .AddAttribute ("MinimumIntervalSize", "Minimum Interval Size",
-                   TimeValue (MilliSeconds(2 ^ DEFAULT_DIO_INTERVAL_MIN)),
+                   TimeValue (MilliSeconds(pow(2, DEFAULT_DIO_INTERVAL_MIN))),
                    MakeTimeAccessor (&Rpl::m_iMin),
                    MakeTimeChecker ())
     .AddAttribute ("MaximumIntervalSize", "Maximum Interval Size",
-                   TimeValue (MilliSeconds((2 ^ DEFAULT_DIO_INTERVAL_DOUBLINGS) * (2 ^ DEFAULT_DIO_INTERVAL_MIN))),
+                   TimeValue (MilliSeconds(pow(2, DEFAULT_DIO_INTERVAL_DOUBLINGS) * pow(2, DEFAULT_DIO_INTERVAL_MIN))),
                    MakeTimeAccessor (&Rpl::m_iMax),
                    MakeTimeChecker ())
     ;
@@ -136,21 +138,20 @@ void Rpl::DoInitialize ()
           Ipv6InterfaceAddress address =  m_routingTable.GetIpv6 ()->GetAddress (i, j);
           Ipv6Prefix networkMask = address.GetPrefix ();
           Ipv6Address networkAddress = address.GetAddress ().CombinePrefix (networkMask);
-          //cout << "addr" << address << std:endl;  
-          if (address.GetAddress() == (ROOT_ADDRESS))
-//          if (networkAddress == (ROOT_ADDRESS))
+          
+          //if (address.GetAddress() == (ROOT_ADDRESS))
+            if (networkAddress == (ROOT_ADDRESS))
             {
               m_routingTable.SetRank (ROOT_RANK);
               m_routingTable.SetNodeType (true);
-              m_routingTable.SetRplInstanceId (RPL_DEFAULT_INSTANCE);
+              m_routingTable.SetRplInstanceId (0);
               m_routingTable.SetDtsn (1);
               m_routingTable.SetVersionNumber (1);
               m_routingTable.SetDodagId ("2002:1::"); //Di pa ko sure kung paano nag-aaddressing.
               m_routingTable.SetFlagG (true);
-              //std::cout << "Root" << std::endl;
-              //SendDio (ALL_RPL_NODES);
+              //SendDio ();
               isRoot = 1;
-              StartTrickle();
+              StartTrickle ();
               break;
             }
         }
@@ -204,18 +205,18 @@ Ptr<Ipv6Route> Rpl::RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<Ne
       multicastEntry->SetOutputTtl (outgoingInterface, 255);
     }
   
-    rtentry = m_routingTable.Lookup (destination, oif);
-    if (rtentry)
-      {
-        sockerr = Socket::ERROR_NOTERROR;
-      }
-    else
-      {
-        //std::cout << "No route to host, rtentry is: " << rtentry <<std::endl;
-        sockerr = Socket::ERROR_NOROUTETOHOST;
-      }
+  rtentry = m_routingTable.Lookup (destination, oif);
+  if (rtentry)
+    {
+      std::cout << "Route found\n";
+      sockerr = Socket::ERROR_NOTERROR;
+    }
+  else
+    {
+      std::cout << "Route not found\n";
+      sockerr = Socket::ERROR_NOROUTETOHOST;
+    }
 
-  //std::cout << "rtentry dst: " << rtentry->GetDestination() << " rtentry src: " << rtentry->GetSource() <<  " rtentry output dev: " << rtentry->GetOutputDevice() << std::endl;
   return rtentry;
 }
 
@@ -224,8 +225,6 @@ bool Rpl::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const N
 {
   NS_LOG_FUNCTION (this << p << header << header.GetSourceAddress () << header.GetDestinationAddress () << idev);
   std::cout << "Enters Route Input" << std::endl;
-  //std::cout << "Packet from: " << header.GetSourceAddress() << std::endl;
-  //std::cout << "Route Input Destination Address is " << header.GetDestinationAddress() << std::endl;
   
   NS_ASSERT (m_routingTable.GetIpv6 () != 0);
   NS_ASSERT (m_routingTable.GetIpv6 ()->GetInterfaceForDevice (idev) >= 0);
@@ -266,7 +265,6 @@ bool Rpl::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const N
     }
 
   NS_LOG_LOGIC ("Unicast destination");
-  //std::cout << "Unicast destination." <<std::endl;
   Ptr<Ipv6Route> rtentry = m_routingTable.Lookup (header.GetDestinationAddress ());
   if (rtentry != 0)
     {
@@ -284,7 +282,6 @@ bool Rpl::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const N
 void Rpl::Receive (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
-//  std::cout <<"Entering Receive." <<std::endl;
   
   Address sender;
   Ptr<Packet> packet = socket->RecvFrom (sender);
@@ -293,8 +290,9 @@ void Rpl::Receive (Ptr<Socket> socket)
   Ipv6Address senderAddress = senderAddr.GetIpv6 ();
   uint16_t senderPort = senderAddr.GetPort ();
 
-//  std::cout <<"Sender Address is " << senderAddress << ", " << senderAddr << std::endl;
-//  std::cout <<"Node Address is " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
+  // std::cout <<"Sender Address is " << senderAddress << ", " << senderAddr << std::endl;
+  // std::cout <<"Node Address is " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
+  
   Ipv6PacketInfoTag interfaceInfo;
   if (!packet->RemovePacketTag (interfaceInfo))
     {
@@ -316,11 +314,10 @@ void Rpl::Receive (Ptr<Socket> socket)
 
   Icmpv6Header rplMessage;
   packet->RemoveHeader (rplMessage);
-  //std::cout << rplMessage << std::endl << "Code is: " << (uint32_t)rplMessage.GetCode() << std::endl;
- 
+
   if (rplMessage.GetType () == 155)
     {
-      if ( (uint32_t)rplMessage.GetCode () == 0) 
+      if ( (uint32_t)rplMessage.GetCode () == 0) //DIS 
         {
           RplDisMessage disMessage;
           RplSolicitedInformationOption solicitedInformation;
@@ -329,7 +326,7 @@ void Rpl::Receive (Ptr<Socket> socket)
 
           RecvDis (disMessage, solicitedInformation, senderAddress, ipInterfaceIndex, senderPort);
         }
-      else if ((uint32_t)rplMessage.GetCode () == 1)
+      else if ((uint32_t)rplMessage.GetCode () == 1) //DIO
         {
           RplDioMessage dioMessage;
           RplDodagConfigurationOption dodagConfiguration;
@@ -343,7 +340,19 @@ void Rpl::Receive (Ptr<Socket> socket)
               m_dioReceived = 0;
             }
 
-          RecvDio (dioMessage, dodagConfiguration, senderAddress, ipInterfaceIndex);
+          RecvDio (dioMessage, dodagConfiguration, senderAddress, ipInterfaceIndex, senderPort);
+        }
+      else if ((uint32_t)rplMessage.GetCode () == 2) //DAO
+        {
+          RplDaoMessage daoMessage;
+          RplTargetOption targetOption;
+          RplTransitInformationOption transitInformation;
+
+          packet->RemoveHeader (daoMessage);
+          packet->RemoveHeader (targetOption);
+          packet->RemoveHeader (transitInformation);
+
+          RecvDao (daoMessage, targetOption, transitInformation);
         }
     }
   else
@@ -356,7 +365,6 @@ void Rpl::Receive (Ptr<Socket> socket)
 
 void Rpl::Join ()
 {
-  std::cout << "Join" << (uint32_t)m_dioReceived << "\n";
   Time delay = Seconds (1);
   m_dioReceived = 1;
   SendMulticastDis ();
@@ -364,24 +372,37 @@ void Rpl::Join ()
 
 void Rpl::RecvDis (RplDisMessage disMessage, RplSolicitedInformationOption solicitedInformation, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort)
 {
-  std::cout << "Recv DIS: sender" << senderAddress << "\n";
+  std::cout << "Recv DIS - sender" << senderAddress << "\n"; 
   if (m_routingTable.GetNodeType () == true) //Only routers can receive DIS messages
     {
-      m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
+      m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface, senderPort);
       SendDio(senderAddress, incomingInterface, senderPort);
-      ResetTrickle ();
+      
+      if(m_routingTable.GetVersionNumber () != 0)
+        {
+          ResetTrickle ();
+        }
 
-//      InsertNeighbor (diffDodag);
     }
   else
     {
       NS_ABORT_MSG ("Node Type: Leaf");
     }
+
+  Ptr<Ipv6Route> rtentry = 0;
+  rtentry = m_routingTable.Lookup (senderAddress);
+
+  if (rtentry)
+    { 
+      std::cout << "Delete route: " << rtentry << "\n";
+      m_routingTable.DeleteRoute (rtentry);
+    }
 }
 
-void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface)
+void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort)
 {
   std::cout << "Received DIO from " << senderAddress <<std::endl << " Rank is " << dioMessage.GetRank() << "\n";
+  
   //Not included yung poison na DIO for disjoin
   if (dioMessage.GetVersionNumber () == m_routingTable.GetVersionNumber ())
     {
@@ -407,7 +428,6 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
           {
             uint16_t computedRank = RplObjectiveFunctionOf0::ComputeRank (dioMessage.GetRank ());
             m_routingTable.SetRank (computedRank);
-            std::cout << "Rank changed: " << m_routingTable.GetRank() << std::endl;
           }
 
         //Assume all nodes are routers (no leaf nodes)
@@ -428,15 +448,22 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
     {
       InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
       m_neighborSet.SelectParent (m_routingTable.GetRank());
-      std::cout << "Parent is " << m_neighborSet.GetParent() << std::endl;
+      std::cout << "Parent is " << m_neighborSet.GetParent() << " : " << dioMessage.GetRank () << std::endl;
 
       //non storing mode
-      m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
+      if (m_neighborSet.GetParent () != "::" && dioMessage.GetRank () < m_routingTable.GetRank ())
+        {
+          m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface, senderPort);
+        }
     }
   
-  std::cout << "DODAG ID (after recv DIS): " << m_routingTable.GetDodagId () << "\n";
-  std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
-  std::cout << "This node's rank is " << m_routingTable.GetRank() << std::endl;
+  Time delay = Seconds (25);
+  if (DAO)
+    {
+      m_sendDao = Simulator::Schedule (delay, &Rpl::SendDao, this);
+    }
+
+  std::cout << "This node's rank is now " << m_routingTable.GetRank() << std::endl;
 }
 
 void Rpl::SendMulticastDis ()
@@ -448,7 +475,7 @@ void Rpl::SendMulticastDis ()
       
       Icmpv6Header dis;
       std::cout << "Sending DIS." << std::endl;
-      std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
+
       dis.SetType (155);
       dis.SetCode (0);
 
@@ -459,11 +486,8 @@ void Rpl::SendMulticastDis ()
       p->AddHeader (disMessage);
       p->AddHeader (dis);
 
-      for (SocketListI iter = m_sendSocketList.begin (); iter != m_sendSocketList.end (); iter++ )
-        {
-          sendingSocket = iter->first;
-        }
-
+      SocketListI iter = m_sendSocketList.begin ();
+      sendingSocket = iter->first;
       sendingSocket->SendTo(p, 0, Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT));
 
       Time delay = Seconds (1);
@@ -610,15 +634,159 @@ void Rpl::SendDio ()
 
 void Rpl::SendDao ()
 {
+  std::cout << "Sending DAO\n";
+  Ptr<Packet> p = Create<Packet>();
+  Ptr<Socket> sendingSocket;
+
   RplDaoMessage daoMessage;
   RplTargetOption targetOption;
   RplTransitInformationOption transitInformation;
 
+  Icmpv6Header dao;
+  dao.SetType (155);
+  dao.SetCode (2);
+
   daoMessage.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
   daoMessage.SetDodagId (m_routingTable.GetDodagId ());
 
-  targetOption.SetPrefixLength ();
-  targetOption.SetTargetPrefix (); //Wala pa sa rpl-option file
+  Ipv6InterfaceAddress address = m_routingTable.GetIpv6()->GetAddress(1,0);
+  Ipv6Prefix networkMask = address.GetPrefix ();
+  Ipv6Address networkAddress = address.GetAddress ();
+
+  if (!m_recvSocket)
+    {
+      NS_LOG_LOGIC ("RPL: adding receiving socket");
+      TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+      Ptr<Node> theNode = GetObject<Node> ();
+      m_recvSocket = Socket::CreateSocket (theNode, tid);
+      Inet6SocketAddress local = Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT);
+      m_recvSocket->Bind (local);
+      m_recvSocket->SetRecvCallback (MakeCallback (&Rpl::Receive, this));
+      m_recvSocket->SetIpv6RecvHopLimit (true);
+      m_recvSocket->SetRecvPktInfo (true);
+    }
+
+  for (SocketListI iter = m_sendSocketList.begin (); iter != m_sendSocketList.end (); iter++ )
+    {
+      if (iter->second == 1)
+        {
+          sendingSocket = iter->first;
+        }
+      else
+        {
+          sendingSocket = m_recvSocket;
+        }
+    }
+
+  if (MOP == 1) //Non-storing mode
+    {
+      std::cout << "Non storing DAO\n";
+      targetOption.SetPrefixLength (networkMask.GetPrefixLength ());
+      targetOption.SetTargetPrefix (networkAddress);
+
+      // transitInformation.SetPathControl ();
+      // transitInformation.SetPathLifetime ();
+      transitInformation.SetPathSequence (1);
+      transitInformation.SetParentAddress (m_neighborSet.GetParent ());
+
+      p->AddHeader (transitInformation);
+      p->AddHeader (targetOption);
+      p->AddHeader (daoMessage);
+      p->AddHeader (dao);
+
+      sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
+    }
+  else if (MOP == 3) //Storing with multicast
+    {
+
+    }
+  else
+    {
+      std::cout << "Downward route not supported\n";
+    }
+
+}
+
+void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation)
+{
+  std::cout << "Receive DAO\n";
+  Ptr<Packet> p = Create<Packet>();
+  Ptr<Socket> sendingSocket;
+
+  Icmpv6Header dao;
+  dao.SetType (155);
+  dao.SetCode (2);
+
+  Ipv6InterfaceAddress address = m_routingTable.GetIpv6()->GetAddress(1,0);
+  Ipv6Prefix networkMask = address.GetPrefix ();
+  Ipv6Address networkAddress = address.GetAddress ();
+
+  if (!m_recvSocket)
+    {
+      NS_LOG_LOGIC ("RPL: adding receiving socket");
+      TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+      Ptr<Node> theNode = GetObject<Node> ();
+      m_recvSocket = Socket::CreateSocket (theNode, tid);
+      Inet6SocketAddress local = Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT);
+      m_recvSocket->Bind (local);
+      m_recvSocket->SetRecvCallback (MakeCallback (&Rpl::Receive, this));
+      m_recvSocket->SetIpv6RecvHopLimit (true);
+      m_recvSocket->SetRecvPktInfo (true);
+    }
+
+  for (SocketListI iter = m_sendSocketList.begin (); iter != m_sendSocketList.end (); iter++ )
+    {
+      if (iter->second == 1)
+        {
+          sendingSocket = iter->first;
+        }
+      else
+        {
+          sendingSocket = m_recvSocket;
+        }
+    }
+
+  if (MOP == 1)
+    {
+      if (m_neighborSet.GetParent () == "::")
+        {
+          std::cout << "DAO - now in root node\n";
+
+          if ((uint32_t)daoMessage.GetRplInstanceId () == (uint32_t)m_routingTable.GetRplInstanceId () && daoMessage.GetDodagId () == m_routingTable.GetDodagId ())
+            {
+              Ipv6Address dest = targetOption.GetTargetPrefix ();
+
+              Ptr<Ipv6Route> rtentry = 0;
+              rtentry = m_routingTable.Lookup (dest);
+
+              if (!rtentry)
+                { 
+                  m_routingTable.AddNetworkRouteTo (dest, 1, transitInformation.GetParentAddress (), dest); 
+                }              
+            }
+          else
+            {
+              std::cout << "Not in the same DODAG\n";
+            }
+        }
+      else
+        {
+          p->AddHeader (transitInformation);
+          p->AddHeader (targetOption);
+          p->AddHeader (daoMessage);
+          p->AddHeader (dao);
+
+          sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
+        }
+    }
+  else if (MOP == 3)
+    { 
+
+    }
+  else
+    {
+      std::cout << "Downward route not supported\n";
+    }
 }
 
 void Rpl::InsertNeighbor (Ipv6Address neighborAddress, Ipv6Address dodagID, uint8_t dtsn, uint16_t rank, 
@@ -651,7 +819,7 @@ void Rpl::InsertNeighbor (neighborType type)
 void Rpl::ResetTrickle ()
 {
   if (m_interval != m_iMin.GetMilliSeconds ())
-    {
+    {     
       if (m_dioSchedule.IsRunning ())
         {
           m_dioSchedule.Cancel ();
@@ -664,11 +832,14 @@ void Rpl::ResetTrickle ()
 
       m_interval = MilliSeconds(m_iMin.GetMilliSeconds ());
       m_counter = 0;
-      m_t = MilliSeconds (m_rng->GetValue (((m_interval.GetMilliSeconds ())/2), ((m_interval.GetMilliSeconds ()) - 1)));
-      if(trickle){
-        m_dioSchedule = Simulator::Schedule (m_t, &Rpl::TrickleTransmit, this);
-        m_restartInterval = Simulator::Schedule (m_interval, &Rpl::RestartInterval, this);
-      }
+      m_t = MilliSeconds (m_rng->GetValue (((m_interval.GetMilliSeconds ())/2), m_interval.GetMilliSeconds ()));
+      
+      std::cout << "----------ResetTrickle-----------\n";    
+      if(trickle)
+        { 
+          m_dioSchedule = Simulator::Schedule (m_t, &Rpl::TrickleTransmit, this);
+          m_restartInterval = Simulator::Schedule (m_interval, &Rpl::RestartInterval, this);
+        }
     }
 
 }
@@ -677,11 +848,14 @@ void Rpl::StartTrickle ()
 {
   m_interval = MilliSeconds (m_rng->GetValue (m_iMin.GetMilliSeconds (), m_iMax.GetMilliSeconds ()) );
   m_counter = 0;
-  m_t = MilliSeconds (m_rng->GetValue (((m_interval.GetMilliSeconds ())/2), ((m_interval.GetMilliSeconds ()) - 1)));
-  if(trickle){
-    m_dioSchedule = Simulator::Schedule (m_t, &Rpl::TrickleTransmit, this);
-    m_restartInterval = Simulator::Schedule (m_interval, &Rpl::RestartInterval, this);
-  }
+  m_t = MilliSeconds (m_rng->GetValue (((m_interval.GetMilliSeconds ())/2), m_interval.GetMilliSeconds ()));
+  
+  std::cout << "-----------StartTrickle-----------\n";
+  if(trickle) 
+    {
+      m_dioSchedule = Simulator::Schedule (m_t, &Rpl::TrickleTransmit, this);
+      m_restartInterval = Simulator::Schedule (m_interval, &Rpl::RestartInterval, this);
+    }
 }
 
 void Rpl::RestartInterval ()
@@ -696,26 +870,29 @@ void Rpl::RestartInterval ()
       m_restartInterval.Cancel ();
     }
 
-  if ((m_interval*2) > m_iMax.GetMilliSeconds ())
+  if ((m_interval*2) > m_iMax)
     { 
       m_interval = MilliSeconds(m_iMax.GetMilliSeconds ());
     }
   else
     { 
-      m_interval = 2*MilliSeconds(m_interval);
+      m_interval = 2*MilliSeconds(m_interval.GetMilliSeconds ());
     }
 
   m_counter = 0;
-  m_t = MilliSeconds (m_rng->GetValue (((m_interval.GetMilliSeconds ())/2), ((m_interval.GetMilliSeconds ()) - 1)));
+  m_t = MilliSeconds (m_rng->GetValue (((m_interval.GetMilliSeconds ())/2), m_interval.GetMilliSeconds ()));
 
-  if(trickle){
-    m_dioSchedule = Simulator::Schedule (m_t, &Rpl::TrickleTransmit, this);
-    m_restartInterval = Simulator::Schedule (m_interval, &Rpl::RestartInterval, this);
-  }
+  std::cout << "-----------RestartInterval-----------\n";
+  if(trickle)
+    {
+      m_dioSchedule = Simulator::Schedule (m_t, &Rpl::TrickleTransmit, this);
+      m_restartInterval = Simulator::Schedule (m_interval, &Rpl::RestartInterval, this);
+    }
 }
 
 void Rpl::TrickleTransmit ()
 {
+  std::cout << "-----------TrickleTransmit-----------\n";
   if (m_counter < DEFAULT_DIO_REDUNDANCY_CONSTANT || DEFAULT_DIO_REDUNDANCY_CONSTANT == 0)
     {
       SendDio();
@@ -726,6 +903,9 @@ void Rpl::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
 
+  std::cout << "----------------------\n\n";
+
+  m_routingTable.PrintRoutingTable ();
   m_routingTable.ClearRoutingTable ();
 
   for (SocketListI iter = m_sendSocketList.begin (); iter != m_sendSocketList.end (); iter++ )
@@ -752,8 +932,8 @@ void Rpl::NotifyInterfaceUp (uint32_t i)
     {
       Ipv6InterfaceAddress address = m_routingTable.GetIpv6()->GetAddress (i, j);
       Ipv6Prefix networkMask = address.GetPrefix ();
-      Ipv6Address networkAddress = address.GetAddress ().CombinePrefix (networkMask);
-      std::cout << "Address #" << j << ": " << address <<" Mask: " <<networkMask << std::endl;
+      Ipv6Address networkAddress = address.GetAddress ();
+      std::cout << "Address #" << j << ": " << networkAddress << " Mask: " <<networkMask << std::endl;
 
       if (address.GetScope () == Ipv6InterfaceAddress::GLOBAL)
         {
@@ -833,7 +1013,7 @@ void Rpl::SetIpv6 (Ptr<Ipv6> ipv6)
 
 void Rpl::PrintRoutingTable (Ptr<OutputStreamWrapper> stream) const
 {
-
+  std::cout << "Printing Routing Table\n";
 }
 
 

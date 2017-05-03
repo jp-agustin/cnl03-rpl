@@ -36,18 +36,24 @@ NS_LOG_COMPONENT_DEFINE ("RplRoutingTable");
  */
 
 RplRoutingTableEntry::RplRoutingTableEntry ()
-  : m_pathSeqNo(0), m_daoSeqNo(0), m_daoLifetime(0), m_pathControl(0), m_retryCounter(0)
+  : m_pathSeqNo(0), m_daoSeqNo(0), m_daoLifetime(0), m_pathControl(0), m_retryCounter(0), m_senderPort(0)
 {
 }
 
-RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest, Ipv6Prefix destPrefix)
-  : m_daoSender(network), m_nextHop(nextHop), m_dest(dest), m_prefix(destPrefix), m_interface(interface)
+RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest)
+  : m_daoSender(network), m_nextHop(nextHop), m_dest(dest), m_interface(interface)
+{
+}
+
+RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, uint32_t interface, uint16_t senderPort)
+  : m_dodagParent(network), m_dest(network), m_interface(interface), m_pathSeqNo(0), m_daoSeqNo(0), m_daoLifetime(0), 
+    m_pathControl(0), m_retryCounter(0), m_senderPort(senderPort)
 {
 }
 
 RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, uint32_t interface)
   : m_dodagParent(network), m_dest(network), m_interface(interface), m_pathSeqNo(0), m_daoSeqNo(0), m_daoLifetime(0), 
-    m_pathControl(0), m_retryCounter(0)
+    m_pathControl(0), m_retryCounter(0), m_senderPort(0)
 {
 }
 
@@ -73,11 +79,6 @@ Ipv6Address RplRoutingTableEntry::GetNextHop () const
 Ipv6Address RplRoutingTableEntry::GetDest () const
 {
   return m_dest;
-}
-
-Ipv6Prefix RplRoutingTableEntry::GetDestNetworkPrefix () const
-{
-  return m_prefix;
 }
 
 uint32_t RplRoutingTableEntry::GetInterface () const
@@ -133,6 +134,16 @@ void RplRoutingTableEntry::SetRetryCounter (uint8_t retryCounter)
 uint8_t RplRoutingTableEntry::GetRetryCounter () const
 {
   return m_retryCounter;
+}
+
+void RplRoutingTableEntry::SetSenderPort (uint16_t senderPort)
+{
+  m_senderPort = senderPort;
+}
+
+uint16_t RplRoutingTableEntry::GetSenderPort () const
+{
+  return m_senderPort;
 }
 
 /*
@@ -282,11 +293,21 @@ Ptr<Ipv6Route> RplRoutingTable::Lookup (Ipv6Address dst, Ptr<NetDevice> interfac
   return rtentry;
 }
 
-bool RplRoutingTable::AddNetworkRouteTo (Ipv6Address network, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest, Ipv6Prefix destPrefix)
+bool RplRoutingTable::AddNetworkRouteTo (Ipv6Address network, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest)
 {
-  NS_LOG_FUNCTION (this << network << interface << dest << destPrefix);
+  NS_LOG_FUNCTION (this << network << interface << dest);
 
-  RplRoutingTableEntry* route = new RplRoutingTableEntry (network, interface, nextHop, dest, destPrefix);
+  RplRoutingTableEntry* route = new RplRoutingTableEntry (network, interface, nextHop, dest);
+
+  m_routes.push_back (std::make_pair (route, EventId ()));
+  return true;
+}
+
+bool RplRoutingTable::AddNetworkRouteTo (Ipv6Address network, uint32_t interface, uint16_t senderPort)
+{
+  NS_LOG_FUNCTION (this << network << interface);
+
+  RplRoutingTableEntry* route = new RplRoutingTableEntry (network, interface, senderPort);
 
   m_routes.push_back (std::make_pair (route, EventId ()));
   return true;
@@ -319,6 +340,26 @@ bool RplRoutingTable::DeleteRoute (RplRoutingTableEntry *route)
   return false;
 }
 
+bool RplRoutingTable::DeleteRoute (Ptr<Ipv6Route> route)
+{
+  //NS_LOG_FUNCTION (this << *route);
+  Ipv6Address dest = route->GetDestination ();
+
+  for (RoutesI it = m_routes.begin (); it != m_routes.end (); it++)
+    {
+      RplRoutingTableEntry* j = it->first;
+
+      if (j->GetDest () == dest)
+        {
+          // delete j;
+          m_routes.erase (it);
+          return true;
+        }
+    }
+  NS_ABORT_MSG ("RplRoutingTable::DeleteRoute - cannot find the route to delete");
+  return false;
+}
+
 bool RplRoutingTable::ClearRoutingTable ()
 {
   for (RoutesI j = m_routes.begin ();  j != m_routes.end (); j = m_routes.erase (j))
@@ -336,6 +377,17 @@ bool RplRoutingTable::ClearRoutingTable ()
   SetDtsn (0);
 
   return true;
+}
+
+void RplRoutingTable::PrintRoutingTable ()
+{
+  for (RoutesI it = m_routes.begin (); it != m_routes.end (); it++)
+    {
+      RplRoutingTableEntry* j = it->first;
+      Ipv6Address dest = j->GetDest ();
+
+      std::cout << "Routing Table Entry destination: " << dest << "\n";
+    }
 }
 
 }

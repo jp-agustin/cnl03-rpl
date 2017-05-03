@@ -53,9 +53,16 @@ public:
    * \param network network address of the DAO sender
    * \param interface interface index
    * \param dest Ipv6 address of the destination
-   * \param destPrefix Ipv6 prefix of the destination
    */
-  RplRoutingTableEntry (Ipv6Address daoSender, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest, Ipv6Prefix destPrefix);
+  RplRoutingTableEntry (Ipv6Address daoSender, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest);
+
+  /**
+   * \brief Constructor
+   * \param network network address of the DODAG Parent
+   * \param interface interface index
+   * \param senderPort sender port
+   */
+  RplRoutingTableEntry (Ipv6Address dodagParent, uint32_t interface, uint16_t senderPort);
 
   /**
    * \brief Constructor
@@ -63,6 +70,7 @@ public:
    * \param interface interface index
    */
   RplRoutingTableEntry (Ipv6Address dodagParent, uint32_t interface);
+
 
   /**
    * \brief Destructor
@@ -92,12 +100,6 @@ public:
    * \return the destination address
    */
   Ipv6Address GetDest () const;
-
-  /**
-   * \brief Get Destination network prefix
-   * \return the destination network prefix
-   */
-  Ipv6Prefix GetDestNetworkPrefix () const;
 
   /**
    * \brief Get Interface
@@ -165,6 +167,18 @@ public:
    */
   uint8_t GetRetryCounter () const;
 
+  /**
+   * \brief Set sender port
+   * \param senderPort the sender port
+   */
+  void SetSenderPort (uint16_t senderPort);
+
+  /**
+   * \brief Get sender port
+   * \return the sender port value
+   */
+  uint16_t GetSenderPort () const;
+
 private:
 
   /**
@@ -186,11 +200,6 @@ private:
    * \brief IPv6 address of the destination
    */
   Ipv6Address m_dest;
-
-  /**
-   * \brief IPv6 prefix of the destination
-   */
-  Ipv6Prefix m_prefix;
 
   /**
    * \brief The interface index.
@@ -222,6 +231,11 @@ private:
    */
   uint8_t m_retryCounter;
 
+  /**
+   * \brief the sender port
+   */
+  uint16_t m_senderPort;
+
 };
 
 class RplRoutingTable
@@ -252,10 +266,18 @@ public:
    * \param network network address
    * \param interface interface index
    * \param dest Destination address
-   * \param destPrefix Destination prefix
    * \return true if succesful
    */
-  bool AddNetworkRouteTo (Ipv6Address network, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest, Ipv6Prefix destPrefix);
+  bool AddNetworkRouteTo (Ipv6Address network, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest);
+
+  /**
+   * \brief Add route to network.
+   * \param network network address
+   * \param interface interface index
+   * \param senderPort sender port
+   * \return true if succesful
+   */
+  bool AddNetworkRouteTo (Ipv6Address network, uint32_t interface, uint16_t senderPort);
 
   /**
    * \brief Add route to network.
@@ -273,10 +295,22 @@ public:
   bool DeleteRoute (RplRoutingTableEntry *route);
 
   /**
+   * \brief Delete a route.
+   * \param route the route to be removed
+   * \return true if succesful
+   */
+  bool DeleteRoute (Ptr<Ipv6Route> route);
+
+  /**
    * \brief Clears the routing table
    * \return true if succesful
    */
   bool ClearRoutingTable ();
+
+  /**
+   * \brief Prints the routing table
+   */
+  void PrintRoutingTable ();
 
 	/**
    * \brief Set RPL Instance ID

@@ -460,6 +460,7 @@ RplTargetOption::RplTargetOption ()
   SetType (5);
   SetFlags (0);
   SetPrefixLength (0);
+  SetTargetPrefix("::");
 }
 
 
@@ -508,6 +509,19 @@ void RplTargetOption::SetPrefixLength (uint8_t prefixLength)
   m_prefixLength = prefixLength;
 }
 
+Ipv6Address RplTargetOption::GetTargetPrefix () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_targetPrefix;
+}
+
+void RplTargetOption::SetTargetPrefix (Ipv6Address targetPrefix)
+{
+  NS_LOG_FUNCTION (this << targetPrefix);
+  m_targetPrefix = targetPrefix;
+}
+
+
 void RplTargetOption::Print (std::ostream& os) const
 {
   NS_LOG_FUNCTION (this << &os);
@@ -524,10 +538,16 @@ void RplTargetOption::Serialize (Buffer::Iterator start) const
 {
   NS_LOG_FUNCTION (this << &start);
   Buffer::Iterator i = start;
+  uint8_t buf[16];
+
   i.WriteU8 (GetType ());
   i.WriteU8 (GetLength ());
   i.WriteU8 (m_prefixLength);
   i.WriteU8 (m_flags);
+
+  memset (buf, 0x00, sizeof (buf));
+  m_targetPrefix.GetBytes (buf);
+  i.Write (buf, 16);
 
 }
 
@@ -535,10 +555,16 @@ uint32_t RplTargetOption::Deserialize (Buffer::Iterator start)
 {
   NS_LOG_FUNCTION (this << &start);
   Buffer::Iterator i = start;
+  uint8_t buf[16];
+
   SetType (i.ReadU8 ());
   SetLength (i.ReadU8 ());
   SetPrefixLength (i.ReadU8 ());
   SetFlags (i.ReadU8 ());
+  i.Read (buf, 16);
+  
+  Ipv6Address prefix (buf);
+  SetTargetPrefix (prefix);
 
   return GetSerializedSize ();
 }

@@ -551,9 +551,23 @@ public:
   void SetPrefixLength (uint8_t prefixLength);
 
   /**
+   * \brief Get the target prefix field.
+   * \return the target prefix value
+   */
+
+  Ipv6Address GetTargetPrefix () const;
+
+  /**
+   * \brief Set the target prefix field.
+   * \param targetPrefix the target prefix value
+   */
+  void SetTargetPrefix (Ipv6Address targetPrefix);
+
+  /**
    * \brief Print informations.
    * \param os output stream
    */
+
   virtual void Print (std::ostream& os) const;
 
   /**
@@ -587,6 +601,10 @@ private:
    */
   uint8_t m_prefixLength;
 
+  /**
+   * \brief The target prefix value
+   */
+  Ipv6Address m_targetPrefix;
 
 };
 

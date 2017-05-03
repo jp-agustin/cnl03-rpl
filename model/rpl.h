@@ -105,8 +105,9 @@ public:
    * \param dodagConfiguration DODAG configuration option
    * \param senderAddress sender adress
    * \param incomingInterface incoming interface
+   * \param senderPort sender port
    */
-  void RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface);
+  void RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort);
 
   /*
    * \brief Send Multicast DIS messages
@@ -125,6 +126,19 @@ public:
    * \param incomingInterface incoming interface
    */
   void SendDio (Ipv6Address destAddress, uint32_t incomingInterface, uint16_t senderPort);
+
+  /*
+   * \brief Send DAO messages
+   */
+  void SendDao ();
+
+  /*
+   * \brief Receive DAO messages
+   * \param daoMessage DAO Message
+   * \param targetOption Target Option
+   * \param transitInformation Transit Information Option
+   */
+  void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation);
 
   /*
    * \brief Insert to neighborSet
@@ -232,7 +246,12 @@ private:
   /**
    * \brief the callback time
    */
-  Time m_t; //not sure sa size
+  Time m_t;
+
+  /**
+   * \brief Send DAO
+   */
+  EventId m_sendDao;
 
   /**
    * \brief DIO schedule event
