@@ -45,7 +45,7 @@
 #define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
 #define MOP 0
-#define OCP 1
+#define OCP 1 
 #define trickle 0
 
 //For 2nd OF 
@@ -366,9 +366,9 @@ void Rpl::Receive (Ptr<Socket> socket)
               //If more metrics are present, need to add more conditions to if, metric option only used for parsing, doesn't need to be passed.
 //              RplHopCountMetric hopMetric;
               packet->RemoveHeader (metricOption);
-              std::cout << "Removed header metric is :" << (uint32_t)metricOption.GetMetric() << std::endl;
-              std::cout << "Removed header length is :" << (uint32_t)metricOption.GetLength() << std::endl;
-              std::cout << "Removed header type is :" << (uint32_t)metricOption.GetRoutingMcType() << std::endl;
+//              std::cout << "Removed header metric is :" << (uint32_t)metricOption.GetMetric() << std::endl;
+//              std::cout << "Removed header length is :" << (uint32_t)metricOption.GetLength() << std::endl;
+//              std::cout << "Removed header type is :" << (uint32_t)metricOption.GetRoutingMcType() << std::endl;
 //              packet->RemoveHeader (hopMetric);
               RecvDio (dioMessage, dodagConfiguration, senderAddress, ipInterfaceIndex, metricOption);
             }
@@ -484,7 +484,7 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
 
     }
   
-  std::cout << "DODAG ID (after recv DIS): " << m_routingTable.GetDodagId () << "\n";
+//  std::cout << "DODAG ID (after recv DIS): " << m_routingTable.GetDodagId () << "\n";
   std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
   std::cout << "This node's rank is " << m_routingTable.GetRank() << std::endl;
 }
@@ -494,7 +494,7 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
   std::cout << "Received DIO from " << senderAddress <<std::endl << " Rank is " << dioMessage.GetRank() << "\n";
   //Not included yung poison na DIO for disjoin
   Time delay = Seconds(1);
-  std::cout << "Metric received is " << (uint32_t)metric.GetMetric() << std::endl;
+//  std::cout << "Metric received is " << (uint32_t)metric.GetMetric() << std::endl;
   if (dioMessage.GetVersionNumber () == m_routingTable.GetVersionNumber ())
     {
       m_counter += 1;
@@ -637,8 +637,8 @@ void Rpl::SendDio (Ipv6Address destAddress, uint32_t incomingInterface, uint16_t
         metricOption.SetRoutingMcType(3);
         metricOption.SetLength(1);
 //        hopMetric.SetHopCount(m_routingTable.GetMetric());
-        std::cout << "My metric is " << (uint32_t)m_routingTable.GetMetric() << std::endl;
-        std::cout << "Set metric is " << (uint32_t)metricOption.GetMetric() << std::endl;
+//        std::cout << "My metric is " << (uint32_t)m_routingTable.GetMetric() << std::endl;
+//        std::cout << "Set metric is " << (uint32_t)metricOption.GetMetric() << std::endl;
         p->AddHeader (metricOption);
 //        p->AddHeader (hopMetric);
       }
@@ -724,7 +724,7 @@ void Rpl::SendDio ()
         metricOption.SetRoutingMcType(3);
         metricOption.SetLength(1);
 //        hopMetric.SetHopCount(m_routingTable.GetMetric());
-        std::cout << "My metric is " << m_routingTable.GetMetric() << std::endl;
+//        std::cout << "My metric is " << m_routingTable.GetMetric() << std::endl;
         metricOption.SetMetric(m_routingTable.GetMetric());
         p->AddHeader (metricOption);
 //        p->AddHeader (hopMetric);
@@ -864,9 +864,20 @@ void Rpl::TrickleTransmit ()
 }
 
 void Rpl::SelectParent()
-{
+{  
   m_neighborSet.SelectParent ();
-  std::cout << "Parent is " << m_neighborSet.GetParent() << std::endl;
+  if (OCP == 0){
+    uint16_t computedRank = RplObjectiveFunctionOf0::ComputeRank (m_neighborSet.GetParent()->GetRank ());
+    m_routingTable.SetRank (computedRank);
+  }  
+  if (OCP == 1){
+    uint16_t computedRank = RplObjectiveFunctionMhrof::ComputeRank (m_neighborSet.GetParent()->GetRank ());
+    m_routingTable.SetRank (computedRank);
+    m_routingTable.SetMetric((uint8_t)computedRank);
+  }
+  if (m_neighborSet.GetParent()){  
+    std::cout << "Parent is " << m_neighborSet.GetParent()->GetNeighborAddress() << std::endl;
+  }
   //Remove Candidate Parent if neighbor count is greater than parent_set_size.
 
 }
@@ -894,7 +905,7 @@ void Rpl::DoDispose ()
 
 void Rpl::NotifyInterfaceUp (uint32_t i)
 {
-  std::cout << "Enters Interface Up." << std::endl;
+//  std::cout << "Enters Interface Up." << std::endl;
   NS_LOG_FUNCTION (this << i);
 
   for (uint32_t j = 0; j < m_routingTable.GetIpv6()->GetNAddresses (i); j++)
@@ -914,13 +925,13 @@ void Rpl::NotifyInterfaceUp (uint32_t i)
 
 void Rpl::NotifyInterfaceDown (uint32_t interface)
 {
-  std::cout <<"Interface down." << std::endl;
+//  std::cout <<"Interface down." << std::endl;
 }
 
 void Rpl::NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address)
 {
-  std::cout << "Enters Notify Add." << std::endl;
-  std::cout << "Address is: " << address << std::endl;
+//  std::cout << "Enters Notify Add." << std::endl;
+//  std::cout << "Address is: " << address << std::endl;
   NS_LOG_FUNCTION (this << interface << address);
   if (!m_routingTable.GetIpv6()->IsUp (interface))
     {
@@ -934,19 +945,19 @@ void Rpl::NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address)
     {
       m_routingTable.AddNetworkRouteTo (networkAddress, interface);
     }
-  std::cout << "Address added: " << networkAddress << std::endl;
+//  std::cout << "Address added: " << networkAddress << std::endl;
 
 }
 
 void Rpl::NotifyRemoveAddress (uint32_t interface, Ipv6InterfaceAddress address)
 {
-  std::cout <<"Remove address." << std::endl;
+//  std::cout <<"Remove address." << std::endl;
 }
 
 void Rpl::NotifyAddRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse)
 {
-  std::cout << "Enters Notify Add Route." << std::endl;
-  std::cout << dst << std::endl;
+//  std::cout << "Enters Notify Add Route." << std::endl;
+//  std::cout << dst << std::endl;
 }
 
 void Rpl::NotifyRemoveRoute (Ipv6Address dst, Ipv6Prefix mask, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse)

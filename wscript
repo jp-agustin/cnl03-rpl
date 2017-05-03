@@ -16,7 +16,8 @@ def build(bld):
         'model/rpl-routing-table.cc',
         'model/rpl-neighbor.cc',
         'model/rpl-objective-function.cc',
-       'helper/rpl-helper.cc',
+        'model/rpl-metric.cc',
+        'helper/rpl-helper.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('rpl')
@@ -34,7 +35,8 @@ def build(bld):
         'model/rpl-neighborset.h',
         'model/rpl-routing-table.h',
         'model/rpl-objective-function.h',
-     'helper/rpl-helper.h',
+        'model/rpl-metric.h',
+        'helper/rpl-helper.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:

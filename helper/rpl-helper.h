@@ -8,6 +8,7 @@
 #include "ns3/node-container.h"
 #include "ns3/node.h"
 #include "ns3/rpl-option.h"
+#include "ns3/rpl-metric.h"
 
 namespace ns3 {
 

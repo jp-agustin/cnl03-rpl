@@ -87,7 +87,7 @@ public:
   /**
    * \brief get parent node in neighborlist.
    */
-  Ipv6Address GetParent();
+  Ptr<Neighbor> GetParent();
 
 private:
   // Container for neighbors
