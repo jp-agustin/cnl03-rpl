@@ -121,7 +121,7 @@ void RplNeighborSet::ClearNeighborSet()
     }
 }
 
-Ptr<Neighbor> RplNeighborSet::SelectParent(uint16_t rank)
+Ptr<Neighbor> RplNeighborSet::SelectParent(/*uint16_t rank*/)
 {
   NS_LOG_FUNCTION (this);
   m_neighborList.sort(SortByRank);
@@ -129,7 +129,7 @@ Ptr<Neighbor> RplNeighborSet::SelectParent(uint16_t rank)
        it != m_neighborList.end (); it++)
     {
     std::cout << "SelectParent ranks : " << it->GetNeighborAddress() << std::endl;
-      if (it->GetReachable() && it->GetRank() < rank)
+      if (it->GetReachable()/* && it->GetRank() < rank*/)
       {
         m_prefParent = &(*it);
         std::cout << "Rank is " << m_prefParent->GetRank() << std::endl;

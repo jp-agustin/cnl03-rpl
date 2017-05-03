@@ -86,7 +86,7 @@ public:
    * \brief Compute the rank
    * \param parentRank the rank of the preferred parent
    */
-  static uint16_t ComputeRank (uint16_t parentRank);
+  static uint16_t ComputeRank (uint8_t metric);
 
 };
 

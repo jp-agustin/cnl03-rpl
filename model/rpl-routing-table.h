@@ -370,6 +370,29 @@ public:
   uint8_t GetDtsn () const;
 
   /**
+   * \brief Set dtsn.
+   * \param dtsn the dtsn value
+   */
+  void SetCurMinPathCost (uint16_t cmp);
+
+  /**
+   * \brief Get dtsn.
+   * \return the dtsn value
+   */
+  uint16_t GetCurMinPathCost () const;
+  /**
+   * \brief Set dtsn.
+   * \param dtsn the dtsn value
+   */
+  void SetMetric (uint8_t metric);
+
+  /**
+   * \brief Get dtsn.
+   * \return the dtsn value
+   */
+  uint8_t GetMetric () const;
+
+  /**
    * \brief G FLag.
    * \param flagG the G flag value
    */
@@ -452,6 +475,16 @@ private:
    * \brief the G flag
    */
   bool m_flagG;
+
+  /**
+   * \brief current minimum path cost
+   */
+  uint16_t m_curMinPathCost;
+
+  /**
+   * \brief current minimum path cost
+   */
+  uint8_t m_metric;
 
 };
 

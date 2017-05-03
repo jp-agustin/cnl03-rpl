@@ -79,9 +79,10 @@ RplObjectiveFunctionMhrof::~RplObjectiveFunctionMhrof ()
 }
 
 //Default, ETX is used.
-uint16_t RplObjectiveFunctionMhrof::ComputeRank (uint16_t parentRank)
+uint16_t RplObjectiveFunctionMhrof::ComputeRank (uint8_t metric)
 {
-  return parentRank;
+  //Hopcount metric is forced.
+  return (uint16_t)metric + 1;
 }
 
 /*

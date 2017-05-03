@@ -6,6 +6,7 @@
 #include "ns3/ipv6-address.h"
 #include "ns3/packet.h"
 #include "ns3/icmpv6-header.h"
+#include "ns3/rpl-metric.h"
 
 namespace ns3 {
 
@@ -551,9 +552,23 @@ public:
   void SetPrefixLength (uint8_t prefixLength);
 
   /**
+   * \brief Get the target prefix field.
+   * \return the target prefix value
+   */
+
+  Ipv6Address GetTargetPrefix () const;
+
+  /**
+   * \brief Set the target prefix field.
+   * \param targetPrefix the target prefix value
+   */
+  void SetTargetPrefix (Ipv6Address targetPrefix);
+
+  /**
    * \brief Print informations.
    * \param os output stream
    */
+
   virtual void Print (std::ostream& os) const;
 
   /**
@@ -587,6 +602,10 @@ private:
    */
   uint8_t m_prefixLength;
 
+  /**
+   * \brief The target prefix value
+   */
+  Ipv6Address m_targetPrefix;
 
 };
 
@@ -1307,7 +1326,20 @@ public:
    * \brief Set the body length
    * \param length value
    */
-  void SetLength (uint8_t length);  
+  void SetLength (uint8_t length);
+
+  /**
+   * \brief Get the metric.
+   * \return metric object
+   */
+  uint8_t GetMetric (void) const;
+
+  /**
+   * \brief Set the metric
+   * \param metric the metric object
+   */
+  void SetMetric (uint8_t metric);
+
 
   /**
    * \brief Print informations.
@@ -1380,6 +1412,13 @@ private:
    * \brief The length flag.
    */
   uint8_t m_length;
+
+  /**
+   * \brief The rpl metric.
+   */
+//  RplHopCountMetric m_hopMetric;
+
+  uint8_t m_hopMetric;
 };
 
 

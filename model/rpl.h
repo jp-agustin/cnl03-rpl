@@ -31,6 +31,7 @@
 #include <ns3/rpl-neighborset.h>
 #include <ns3/rpl-header.h>
 #include <ns3/rpl-option.h>
+#include <ns3/rpl-metric.h>
 #include <ns3/random-variable-stream.h>
 
 namespace ns3 {
@@ -108,6 +109,16 @@ public:
    */
   void RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface);
 
+  /**
+   * \brief DIO receive
+   * \param dioMessage Received DIO message
+   * \param dodagConfiguration DODAG configuration option
+   * \param senderAddress sender adress
+   * \param incomingInterface incoming interface
+   * \param metric metric
+   */
+  void RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface, RplMetricContainerOption metric);
+
   /*
    * \brief Send Multicast DIS messages
    */
@@ -168,6 +179,8 @@ public:
    * \brief Transmit scheduled DIO
    */
   void TrickleTransmit ();
+
+  void SelectParent();
 
   virtual void NotifyInterfaceUp (uint32_t interface);
   virtual void NotifyInterfaceDown (uint32_t interface);
@@ -261,6 +274,11 @@ private:
    * \brief DIS schedule event
    */
   EventId m_multicastDis;
+
+  /**
+   * \brief parent select schedule event
+   */
+  EventId m_selectParent;
 
 protected:
   /**

@@ -81,7 +81,8 @@ public:
   /**
    * \brief select parent node in neighborlist.
    */
-  Ptr<Neighbor> SelectParent(uint16_t rank);
+  Ptr<Neighbor> SelectParent(void);
+//  Ptr<Neighbor> SelectParent(uint16_t rank);
 
   /**
    * \brief get parent node in neighborlist.
