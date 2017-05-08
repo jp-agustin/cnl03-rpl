@@ -39,7 +39,7 @@
 
 #define BASE_RANK 0
 #define RPL_PORT 521
-#define ROOT_RANK 1 
+#define ROOT_RANK 0 
 #define INFINITE_RANK 0xffff
 //#define ROOT_ADDRESS "2001:1::"
 #define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
@@ -158,7 +158,6 @@ void Rpl::DoInitialize ()
           if (address.GetAddress() == (ROOT_ADDRESS))
 //          if (networkAddress == (ROOT_ADDRESS))
             {
-              m_routingTable.SetRank (ROOT_RANK);
               m_routingTable.SetNodeType (true);
               m_routingTable.SetRplInstanceId (RPL_DEFAULT_INSTANCE);
               m_routingTable.SetDtsn (1);
@@ -167,6 +166,12 @@ void Rpl::DoInitialize ()
               m_routingTable.SetFlagG (true);
               //std::cout << "Root" << std::endl;
               //SendDio (ALL_RPL_NODES);
+              if (OCP == 0){
+                m_routingTable.SetRank (1);
+              }
+              if (OCP == 1){
+                m_routingTable.SetRank (0);
+              }
               isRoot = 1;
               StartTrickle();
               break;
@@ -207,8 +212,10 @@ Ptr<Ipv6Route> Rpl::RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<Ne
 {
   NS_LOG_FUNCTION (this << header << oif);
   Ipv6Address destination = header.GetDestinationAddress ();
+  std::cout << "----------------------" << std::endl;
   std::cout << "Route Output." <<std::endl << "Destination is " << destination << std::endl;
   std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
+  std::cout << "----------------------" << std::endl;
 
   Ptr<Ipv6Route> rtentry = 0;
   if (destination.IsMulticast ())
@@ -241,10 +248,11 @@ bool Rpl::RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const N
                         LocalDeliverCallback lcb, ErrorCallback ecb)
 {
   NS_LOG_FUNCTION (this << p << header << header.GetSourceAddress () << header.GetDestinationAddress () << idev);
+  std::cout << "----------------------" << std::endl;
   std::cout << "Enters Route Input" << std::endl;
   //std::cout << "Packet from: " << header.GetSourceAddress() << std::endl;
   //std::cout << "Route Input Destination Address is " << header.GetDestinationAddress() << std::endl;
-  
+  std::cout << "----------------------" << std::endl;  
   NS_ASSERT (m_routingTable.GetIpv6 () != 0);
   NS_ASSERT (m_routingTable.GetIpv6 ()->GetInterfaceForDevice (idev) >= 0);
   uint32_t iif = m_routingTable.GetIpv6 ()->GetInterfaceForDevice (idev);
@@ -385,10 +393,12 @@ void Rpl::Receive (Ptr<Socket> socket)
 
 void Rpl::Join ()
 {
-  std::cout << "Join" << (uint32_t)m_dioReceived << "\n";
+  std::cout << "----------------------" << std::endl;
+  std::cout << "Join" << "\n";
   Time delay = Seconds (1);
   m_dioReceived = 1;
   SendMulticastDis ();
+  std::cout << "----------------------" << std::endl;
 }
 
 void Rpl::RecvDis (RplDisMessage disMessage, RplSolicitedInformationOption solicitedInformation, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort)
@@ -410,7 +420,8 @@ void Rpl::RecvDis (RplDisMessage disMessage, RplSolicitedInformationOption solic
 
 void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface)
 {
-  std::cout << "Received DIO from " << senderAddress <<std::endl << " Rank is " << dioMessage.GetRank() << "\n";
+  std::cout << "----------------------" << std::endl;
+  std::cout << "Received DIO from " << senderAddress <<std::endl << "Rank from message is " << dioMessage.GetRank() << "\n";
   //Not included yung poison na DIO for disjoin
   Time delay = Seconds(1);
   if (dioMessage.GetVersionNumber () == m_routingTable.GetVersionNumber ())
@@ -487,11 +498,13 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
 //  std::cout << "DODAG ID (after recv DIS): " << m_routingTable.GetDodagId () << "\n";
   std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
   std::cout << "This node's rank is " << m_routingTable.GetRank() << std::endl;
+  std::cout << "----------------------" << std::endl;
 }
 
 void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface, RplMetricContainerOption metric)
 {
-  std::cout << "Received DIO from " << senderAddress <<std::endl << " Rank is " << dioMessage.GetRank() << "\n";
+  std::cout << "----------------------" << std::endl;
+  std::cout << "Received DIO from " << senderAddress <<std::endl << "Rank from DIO Message is " << dioMessage.GetRank() << "\n";
   //Not included yung poison na DIO for disjoin
   Time delay = Seconds(1);
 //  std::cout << "Metric received is " << (uint32_t)metric.GetMetric() << std::endl;
@@ -560,6 +573,7 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
         SelectParent();
       }
 
+  std::cout << "----------------------" << std::endl;
     }
 }
 
@@ -772,9 +786,9 @@ void Rpl::InsertNeighbor (Ipv6Address neighborAddress, Ipv6Address dodagID, uint
   neighbor.SetInterface (incomingInterface);
   neighbor.SetReachable(true);      
 
-  std::cout << "Inserting Neighbor: " << neighbor.GetNeighborAddress ()
-  << neighbor.GetRank ()
-  << neighbor.GetReachable()      
+  std::cout << "Inserting Neighbor: " << neighbor.GetNeighborAddress () // << std::endl
+//  << neighbor.GetRank () << std::endl
+//  << neighbor.GetReachable()      
   << std::endl;
 
   m_neighborSet.AddNeighbor(neighbor);

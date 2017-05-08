@@ -128,7 +128,7 @@ Ptr<Neighbor> RplNeighborSet::SelectParent(/*uint16_t rank*/)
   for (NeighborList::iterator it = m_neighborList.begin ();
        it != m_neighborList.end (); it++)
     {
-    std::cout << "SelectParent ranks : " << it->GetNeighborAddress() << std::endl;
+    std::cout << "Selected Parent: " << it->GetNeighborAddress() << std::endl;
       if (it->GetReachable()/* && it->GetRank() < rank*/)
       {
         m_prefParent = &(*it);
