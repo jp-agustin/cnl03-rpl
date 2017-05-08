@@ -6,6 +6,7 @@
 #include "ns3/ipv6-address.h"
 #include "ns3/packet.h"
 #include "ns3/icmpv6-header.h"
+#include "ns3/rpl-metric.h"
 
 namespace ns3 {
 
@@ -1328,6 +1329,18 @@ public:
   void SetLength (uint8_t length);  
 
   /**
+   * \brief Get the metric.
+   * \return metric object
+   */
+  uint8_t GetMetric (void) const;
+
+  /**
+   * \brief Set the metric
+   * \param metric the metric object
+   */
+  void SetMetric (uint8_t metric);
+
+  /**
    * \brief Print informations.
    * \param os output stream
    */
@@ -1398,6 +1411,12 @@ private:
    * \brief The length flag.
    */
   uint8_t m_length;
+
+  /**
+   * \brief The rpl metric.
+   */
+  uint8_t m_hopMetric;
+
 };
 
 

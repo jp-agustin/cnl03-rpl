@@ -151,7 +151,7 @@ uint16_t RplRoutingTableEntry::GetSenderPort () const
  */
 
 RplRoutingTable::RplRoutingTable ()
-  : m_ipv6 (0), m_rplInstanceId(0), m_dodagId("::"), m_version(0), m_rank(0), m_ocp(0), m_nodeType(true), m_dtsn(0), m_flagG(true)
+  : m_ipv6 (0), m_rplInstanceId(0), m_dodagId("::"), m_version(0), m_rank(0), m_ocp(0), m_nodeType(true), m_dtsn(0), m_flagG(true), m_metric(0)
 {
 
 }
@@ -248,6 +248,26 @@ void RplRoutingTable::SetIpv6 (Ptr<Ipv6> ipv6)
 Ptr<Ipv6> RplRoutingTable::GetIpv6 ()
 {
   return m_ipv6;
+}
+
+void RplRoutingTable::SetCurMinPathCost (uint16_t cmp)
+{
+  m_curMinPathCost = cmp;
+}
+
+uint16_t RplRoutingTable::GetCurMinPathCost () const
+{
+  return m_curMinPathCost;
+}
+
+void RplRoutingTable::SetMetric (uint8_t metric)
+{
+  m_metric = metric;
+}
+
+uint8_t RplRoutingTable::GetMetric () const
+{
+  return m_metric;
 }
 
 Ptr<Ipv6Route> RplRoutingTable::Lookup (Ipv6Address dst, Ptr<NetDevice> interface)

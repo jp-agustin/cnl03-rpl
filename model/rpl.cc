@@ -39,13 +39,13 @@
 
 #define BASE_RANK 0
 #define RPL_PORT 521
-#define ROOT_RANK 1 
+//#define ROOT_RANK 1 
 #define INFINITE_RANK 0xffff
 //#define ROOT_ADDRESS "2001:1::"
 #define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
-#define MOP 3
-#define OCP 0
+#define MOP 1
+#define OCP 1
 #define trickle 1
 #define DAO 1
 
@@ -62,6 +62,7 @@
 #include "rpl.h"
 #include "rpl-header.h"
 #include "rpl-option.h"
+#include "rpl-metric.h"
 #include "rpl-objective-function.h"
 #include "ns3/simulator.h"
 
@@ -139,6 +140,12 @@ void Rpl::DoInitialize ()
           Ipv6Prefix networkMask = address.GetPrefix ();
           Ipv6Address networkAddress = address.GetAddress ().CombinePrefix (networkMask);
           
+          int ROOT_RANK;
+          if (MOP == 0)
+            ROOT_RANK = 1;
+          else
+            ROOT_RANK = 0;
+
           if (address.GetAddress() == (ROOT_ADDRESS))
             //if (networkAddress == (ROOT_ADDRESS))
             {
@@ -431,17 +438,17 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
           m_neighborSet.SelectParent (m_routingTable.GetRank ());
           m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
         }
-      // if (dodagConfiguration.GetObjectiveCodePoint () == 1)
-      //   {
-      //     uint16_t computedRank = RplObjectiveFunctionMhrof::ComputeRank (dioMessage.GetRank ());
-      //     m_routingTable.SetRank (computedRank);
-      //     //Add the received DIO as parent.
-      //     InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
-      //     m_neighborSet.SelectParent ();
-      //     std::cout << "Enters wrong here." << std::endl;
-      //     m_routingTable.SetMetric(computedRank);
-      //     m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
-      //   }
+      if (dodagConfiguration.GetObjectiveCodePoint () == 1)
+        {
+          uint16_t computedRank = RplObjectiveFunctionMhrof::ComputeRank (dioMessage.GetRank ());
+          m_routingTable.SetRank (computedRank);
+          //Add the received DIO as parent.
+          InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
+          m_neighborSet.SelectParent (m_routingTable.GetRank ());
+          std::cout << "Enters wrong here." << std::endl;
+          m_routingTable.SetMetric(computedRank);
+          m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
+        }
 
       //Assume all nodes are routers (no leaf nodes)
 
@@ -859,7 +866,8 @@ void Rpl::InsertNeighbor (neighborType type)
 void Rpl::SelectParent()
 {  
   m_neighborSet.SelectParent (m_routingTable.GetRank ());
-  if (OCP == 0)
+
+  if (OCP == 0) //OF0
     {
       if (m_neighborSet.GetParent ())
         {
@@ -867,11 +875,17 @@ void Rpl::SelectParent()
           m_routingTable.SetRank (computedRank);
         }
     }  
-  // if (OCP == 1){
-  //   uint16_t computedRank = RplObjectiveFunctionMhrof::ComputeRank (m_neighborSet.GetParent()->GetRank ());
-  //   m_routingTable.SetRank (computedRank);
-  //   m_routingTable.SetMetric((uint8_t)computedRank);
-  // }
+
+  if (OCP == 1) //MHROF
+    {
+      if (m_neighborSet.GetParent ())
+        {
+          uint16_t computedRank = RplObjectiveFunctionMhrof::ComputeRank (m_neighborSet.GetParent()->GetRank ());
+          m_routingTable.SetRank (computedRank);
+          m_routingTable.SetMetric((uint8_t)computedRank);
+        }
+    }
+
   if (m_neighborSet.GetParent()){  
     std::cout << "Parent is " << m_neighborSet.GetParentAddress() << std::endl;
   }

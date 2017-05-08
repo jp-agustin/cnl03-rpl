@@ -1092,6 +1092,7 @@ RplMetricContainerOption::RplMetricContainerOption ()
   SetFlagA(0);
   SetFlagPrec(0);
   SetLength(0);
+  SetMetric(0);
 }
 
 RplMetricContainerOption::~RplMetricContainerOption ()
@@ -1210,6 +1211,18 @@ void RplMetricContainerOption::SetFlagPrec (uint8_t prec)
   m_flagPrec = prec;
 }
 
+uint8_t RplMetricContainerOption::GetMetric () const
+{
+  NS_LOG_FUNCTION (this);
+  return m_hopMetric;
+}
+
+void RplMetricContainerOption::SetMetric (uint8_t metric)
+{
+  NS_LOG_FUNCTION (this << metric);
+  m_hopMetric = metric;
+}
+
 uint8_t RplMetricContainerOption::GetLength () const
 {
   NS_LOG_FUNCTION (this);
@@ -1231,7 +1244,7 @@ void RplMetricContainerOption::Print (std::ostream& os) const{}
 uint32_t RplMetricContainerOption::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
-  return 4 + m_length;
+  return 5;
 }
 
 
@@ -1275,6 +1288,7 @@ void RplMetricContainerOption::Serialize (Buffer::Iterator start) const
   i.WriteU8 (m_routingMcType); 
   i.WriteU16 (flags);
   i.WriteU8 (m_length);
+  i.WriteU8(m_hopMetric);
 }
 
 uint32_t RplMetricContainerOption::Deserialize (Buffer::Iterator start)
@@ -1285,6 +1299,7 @@ uint32_t RplMetricContainerOption::Deserialize (Buffer::Iterator start)
   m_routingMcType = i.ReadU8 ();
   m_resFlags = i.ReadU16 ();
   m_length = i.ReadU8 ();
+  m_hopMetric = i.ReadU8 ();
 
   return GetSerializedSize ();
 }
