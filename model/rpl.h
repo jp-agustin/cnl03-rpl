@@ -155,6 +155,11 @@ public:
    */
   void InsertNeighbor (neighborType type);
 
+  /*
+   * \brief Compute rank with selected parent
+   */
+  void SelectParent ();
+
   /**
    * \brief Resets the timer
    */
@@ -272,6 +277,12 @@ private:
    * \brief DIS schedule event
    */
   EventId m_multicastDis;
+
+  /**
+   * \brief parent select schedule event
+   */
+  EventId m_selectParent;
+
 
 protected:
   /**

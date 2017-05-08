@@ -46,7 +46,7 @@
 
 #define MOP 3
 #define OCP 0
-#define trickle 0
+#define trickle 1
 #define DAO 1
 
 #include <iostream>
@@ -402,8 +402,8 @@ void Rpl::RecvDis (RplDisMessage disMessage, RplSolicitedInformationOption solic
 void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagConfiguration, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort)
 {
   std::cout << "Received DIO from " << senderAddress <<std::endl << " Rank is " << dioMessage.GetRank() << "\n";
-  
   //Not included yung poison na DIO for disjoin
+  Time delay = Seconds(1);
   if (dioMessage.GetVersionNumber () == m_routingTable.GetVersionNumber ())
     {
       m_counter += 1;
@@ -414,56 +414,77 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
     }
   else
     {
-      if (dioMessage.GetRank() < m_routingTable.GetRank() || m_routingTable.GetRank () == 0)
-       {
-        m_routingTable.ClearRoutingTable ();
-        m_neighborSet.ClearNeighborSet ();
+      m_routingTable.ClearRoutingTable ();
+      m_neighborSet.ClearNeighborSet ();
         
-        m_routingTable.SetRplInstanceId (dioMessage.GetRplInstanceId ());
-        m_routingTable.SetDodagId (dioMessage.GetDodagId ());
-        m_routingTable.SetObjectiveCodePoint (dodagConfiguration.GetObjectiveCodePoint ());
-        m_routingTable.SetDtsn (dioMessage.GetDtsn ()); 
+      m_routingTable.SetRplInstanceId (dioMessage.GetRplInstanceId ());
+      m_routingTable.SetDodagId (dioMessage.GetDodagId ());
+      m_routingTable.SetObjectiveCodePoint (dodagConfiguration.GetObjectiveCodePoint ());
+      m_routingTable.SetDtsn (dioMessage.GetDtsn ());
 
-        if (dodagConfiguration.GetObjectiveCodePoint () == 0)
-          {
-            uint16_t computedRank = RplObjectiveFunctionOf0::ComputeRank (dioMessage.GetRank ());
-            m_routingTable.SetRank (computedRank);
-          }
+      if (dodagConfiguration.GetObjectiveCodePoint () == 0)
+        {
+          uint16_t computedRank = RplObjectiveFunctionOf0::ComputeRank (dioMessage.GetRank ());
+          m_routingTable.SetRank (computedRank);
+          //Add the received DIO as parent.
+          InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
+          m_neighborSet.SelectParent (m_routingTable.GetRank ());
+          m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
+        }
+      // if (dodagConfiguration.GetObjectiveCodePoint () == 1)
+      //   {
+      //     uint16_t computedRank = RplObjectiveFunctionMhrof::ComputeRank (dioMessage.GetRank ());
+      //     m_routingTable.SetRank (computedRank);
+      //     //Add the received DIO as parent.
+      //     InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
+      //     m_neighborSet.SelectParent ();
+      //     std::cout << "Enters wrong here." << std::endl;
+      //     m_routingTable.SetMetric(computedRank);
+      //     m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
+      //   }
 
-        //Assume all nodes are routers (no leaf nodes)
+      //Assume all nodes are routers (no leaf nodes)
 
-        if (m_routingTable.GetVersionNumber () != 0)
-          {
-            ResetTrickle ();
-          }
-        else
-          { 
-            StartTrickle ();
-            m_routingTable.SetVersionNumber (dioMessage.GetVersionNumber ());
-          }
+      if (m_routingTable.GetVersionNumber () != 0)
+        {
+          ResetTrickle ();
+        }
+      else
+        { 
+          StartTrickle ();
+          m_routingTable.SetVersionNumber (dioMessage.GetVersionNumber ());
         }
     }
 
   if (!m_neighborSet.FindNeighbor(senderAddress))
     {
       InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
-      m_neighborSet.SelectParent (m_routingTable.GetRank());
-      std::cout << "Parent is " << m_neighborSet.GetParent() << " : " << dioMessage.GetRank () << std::endl;
+      SelectParent();
 
       //non storing mode
-      if (m_neighborSet.GetParent () != "::" && dioMessage.GetRank () < m_routingTable.GetRank ())
+      if (m_neighborSet.GetParentAddress () != "::" && dioMessage.GetRank () < m_routingTable.GetRank ())
         {
           m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface, senderPort);
-        }
+        }    
     }
-  
-  Time delay = Seconds (25);
-  if (DAO)
+  else
     {
-      m_sendDao = Simulator::Schedule (delay, &Rpl::SendDao, this);
+      //Check if rank is update else discard packet.
+      if (m_neighborSet.FindNeighbor(senderAddress)->GetRank() != dioMessage.GetRank())
+        {
+          m_selectParent = Simulator::Schedule (delay, &Rpl::SelectParent, this);
+        }
+
     }
 
-  std::cout << "This node's rank is now " << m_routingTable.GetRank() << std::endl;
+  Time delayDao = Seconds (25);
+  if (DAO)
+    {
+      m_sendDao = Simulator::Schedule (delayDao, &Rpl::SendDao, this);
+    }
+  
+  std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
+  std::cout << "This node's rank is " << m_routingTable.GetRank() << std::endl;
 }
 
 void Rpl::SendMulticastDis ()
@@ -687,14 +708,14 @@ void Rpl::SendDao ()
       // transitInformation.SetPathControl ();
       // transitInformation.SetPathLifetime ();
       transitInformation.SetPathSequence (1);
-      transitInformation.SetParentAddress (m_neighborSet.GetParent ());
+      transitInformation.SetParentAddress (m_neighborSet.GetParentAddress ());
 
       p->AddHeader (transitInformation);
       p->AddHeader (targetOption);
       p->AddHeader (daoMessage);
       p->AddHeader (dao);
 
-      sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
+      sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParentAddress (), 521));
     }
   else
     {
@@ -742,7 +763,7 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
         }
     }
 
-  if (m_neighborSet.GetParent () == "::")
+  if (m_neighborSet.GetParentAddress () == "::")
     {
       std::cout << "DAO - now in root node\n";
 
@@ -789,7 +810,7 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
           p->AddHeader (daoMessage);
           p->AddHeader (dao);
 
-          sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
+          sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParentAddress (), 521));
         }
       else if (MOP == 1)
         {
@@ -798,7 +819,7 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
           p->AddHeader (daoMessage);
           p->AddHeader (dao);
 
-          sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
+          sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParentAddress (), 521));
         }
       else
         {
@@ -834,6 +855,30 @@ void Rpl::InsertNeighbor (neighborType type)
 
   m_neighborSet.AddNeighbor(neighbor);
 }
+
+void Rpl::SelectParent()
+{  
+  m_neighborSet.SelectParent (m_routingTable.GetRank ());
+  if (OCP == 0)
+    {
+      if (m_neighborSet.GetParent ())
+        {
+          uint16_t computedRank = RplObjectiveFunctionOf0::ComputeRank (m_neighborSet.GetParent()->GetRank ());
+          m_routingTable.SetRank (computedRank);
+        }
+    }  
+  // if (OCP == 1){
+  //   uint16_t computedRank = RplObjectiveFunctionMhrof::ComputeRank (m_neighborSet.GetParent()->GetRank ());
+  //   m_routingTable.SetRank (computedRank);
+  //   m_routingTable.SetMetric((uint8_t)computedRank);
+  // }
+  if (m_neighborSet.GetParent()){  
+    std::cout << "Parent is " << m_neighborSet.GetParentAddress() << std::endl;
+  }
+  //Remove Candidate Parent if neighbor count is greater than parent_set_size.
+
+}
+
 
 void Rpl::ResetTrickle ()
 {
@@ -925,6 +970,8 @@ void Rpl::DoDispose ()
   std::cout << "----------------------\n\n";
 
   m_routingTable.PrintRoutingTable ();
+  std::cout << "Rank: " << m_routingTable.GetRank () << "\n";
+
   m_routingTable.ClearRoutingTable ();
 
   for (SocketListI iter = m_sendSocketList.begin (); iter != m_sendSocketList.end (); iter++ )

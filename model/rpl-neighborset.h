@@ -80,13 +80,22 @@ public:
 
   /**
    * \brief select parent node in neighborlist.
+   * \param rank current rank
    */
   Ptr<Neighbor> SelectParent(uint16_t rank);
+//  Ptr<Neighbor> SelectParent(uint16_t rank);
 
   /**
    * \brief get parent node in neighborlist.
    */
-  Ipv6Address GetParent();
+  Ptr<Neighbor> GetParent();
+
+  /**
+   * \brief Get parent Address
+   */
+  Ipv6Address GetParentAddress();
+
+
 
 private:
   // Container for neighbors

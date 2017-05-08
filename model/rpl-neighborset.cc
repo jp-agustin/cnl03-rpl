@@ -136,10 +136,20 @@ Ptr<Neighbor> RplNeighborSet::SelectParent(uint16_t rank)
         return m_prefParent;
       }
     }
-  return NULL;
+  return nullptr;
 } 
 
-Ipv6Address RplNeighborSet::GetParent()
+Ptr<Neighbor> RplNeighborSet::GetParent()
+{
+  NS_LOG_FUNCTION (this);
+  if (m_prefParent)
+  {
+    return m_prefParent;
+  }
+  return nullptr;
+} 
+
+Ipv6Address RplNeighborSet::GetParentAddress()
 {
   NS_LOG_FUNCTION (this);
   if (m_prefParent != NULL)
@@ -148,5 +158,8 @@ Ipv6Address RplNeighborSet::GetParent()
   }
   return "::";
 } 
+
+
+//Add function to return number of parents in parent set.
 
 }
