@@ -261,14 +261,12 @@ struct RplRoutingTableEntryTest : public TestCase
     Ipv6Address daoSender;
     Ipv6Address nextHop;
     Ipv6Address dest;
-    Ipv6Prefix destPrefix;
 
-    RplRoutingTableEntry routingTableEntry1 (daoSender, interface, nextHop, dest, destPrefix);
+    RplRoutingTableEntry routingTableEntry1 (daoSender, interface, nextHop, dest);
     NS_TEST_EXPECT_MSG_EQ (routingTableEntry1.GetDaoSender (), daoSender, "Dao Sender");
     NS_TEST_EXPECT_MSG_EQ (routingTableEntry1.GetInterface (), interface, "Interface");
     NS_TEST_EXPECT_MSG_EQ (routingTableEntry1.GetNextHop (), nextHop, "Next Hop");
     NS_TEST_EXPECT_MSG_EQ (routingTableEntry1.GetDest (), dest, "Destination");
-    NS_TEST_EXPECT_MSG_EQ (routingTableEntry1.GetDestNetworkPrefix (), destPrefix, "Destination Prefix");
   }
 };
 
@@ -297,8 +295,7 @@ struct RplRoutingTableTest : public TestCase
     Ipv6Address daoSender;
     Ipv6Address nextHop;
     Ipv6Address dest;
-    Ipv6Prefix destPrefix;
-    NS_TEST_EXPECT_MSG_EQ (routingTable.AddNetworkRouteTo (daoSender, interface, nextHop, dest, destPrefix), true, "Add Network");
+    NS_TEST_EXPECT_MSG_EQ (routingTable.AddNetworkRouteTo (daoSender, interface, nextHop, dest), true, "Add Network");
 
     NS_TEST_EXPECT_MSG_EQ (routingTable.ClearRoutingTable (), true, "Clear Routing Table");
   }
