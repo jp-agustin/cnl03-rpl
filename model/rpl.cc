@@ -41,10 +41,10 @@
 #define RPL_PORT 521
 #define ROOT_RANK 1 
 #define INFINITE_RANK 0xffff
-#define ROOT_ADDRESS "2001:1::"
-//#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
+//#define ROOT_ADDRESS "2001:1::"
+#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
-#define MOP 1
+#define MOP 3
 #define OCP 0
 #define trickle 0
 #define DAO 1
@@ -139,8 +139,8 @@ void Rpl::DoInitialize ()
           Ipv6Prefix networkMask = address.GetPrefix ();
           Ipv6Address networkAddress = address.GetAddress ().CombinePrefix (networkMask);
           
-          //if (address.GetAddress() == (ROOT_ADDRESS))
-            if (networkAddress == (ROOT_ADDRESS))
+          if (address.GetAddress() == (ROOT_ADDRESS))
+            //if (networkAddress == (ROOT_ADDRESS))
             {
               m_routingTable.SetRank (ROOT_RANK);
               m_routingTable.SetNodeType (true);
@@ -678,7 +678,7 @@ void Rpl::SendDao ()
         }
     }
 
-  if (MOP == 1) //Non-storing mode
+  if (MOP == 1 || MOP == 3) //Non-storing and Storing mode
     {
       std::cout << "Non storing DAO\n";
       targetOption.SetPrefixLength (networkMask.GetPrefixLength ());
@@ -695,10 +695,6 @@ void Rpl::SendDao ()
       p->AddHeader (dao);
 
       sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
-    }
-  else if (MOP == 3) //Storing with multicast
-    {
-
     }
   else
     {
@@ -746,12 +742,31 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
         }
     }
 
-  if (MOP == 1)
+  if (m_neighborSet.GetParent () == "::")
     {
-      if (m_neighborSet.GetParent () == "::")
-        {
-          std::cout << "DAO - now in root node\n";
+      std::cout << "DAO - now in root node\n";
 
+      if ((uint32_t)daoMessage.GetRplInstanceId () == (uint32_t)m_routingTable.GetRplInstanceId () && daoMessage.GetDodagId () == m_routingTable.GetDodagId ())
+         {
+           Ipv6Address dest = targetOption.GetTargetPrefix ();
+
+           Ptr<Ipv6Route> rtentry = 0;
+           rtentry = m_routingTable.Lookup (dest);
+
+          if (!rtentry)
+            { 
+              m_routingTable.AddNetworkRouteTo (dest, 1, transitInformation.GetParentAddress (), dest); 
+            }              
+        }
+      else
+        {
+          std::cout << "Not in the same DODAG\n";
+        }
+    }
+  else
+    {
+      if (MOP == 3)
+        {
           if ((uint32_t)daoMessage.GetRplInstanceId () == (uint32_t)m_routingTable.GetRplInstanceId () && daoMessage.GetDodagId () == m_routingTable.GetDodagId ())
             {
               Ipv6Address dest = targetOption.GetTargetPrefix ();
@@ -759,17 +774,24 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
               Ptr<Ipv6Route> rtentry = 0;
               rtentry = m_routingTable.Lookup (dest);
 
-              if (!rtentry)
-                { 
-                  m_routingTable.AddNetworkRouteTo (dest, 1, transitInformation.GetParentAddress (), dest); 
-                }              
+            if (!rtentry)
+              { 
+                m_routingTable.AddNetworkRouteTo (dest, 1, dest, dest); 
+              }              
             }
           else
             {
               std::cout << "Not in the same DODAG\n";
             }
+
+          p->AddHeader (transitInformation);
+          p->AddHeader (targetOption);
+          p->AddHeader (daoMessage);
+          p->AddHeader (dao);
+
+          sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
         }
-      else
+      else if (MOP == 1)
         {
           p->AddHeader (transitInformation);
           p->AddHeader (targetOption);
@@ -778,15 +800,12 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
 
           sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParent (), 521));
         }
+      else
+        {
+          std::cout << "Downward route not supported\n";
+        }
     }
-  else if (MOP == 3)
-    { 
 
-    }
-  else
-    {
-      std::cout << "Downward route not supported\n";
-    }
 }
 
 void Rpl::InsertNeighbor (Ipv6Address neighborAddress, Ipv6Address dodagID, uint8_t dtsn, uint16_t rank, 
