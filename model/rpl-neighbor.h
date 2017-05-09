@@ -131,7 +131,9 @@ private:
 
   typedef std::list<Neighbor> NeighborList;
 
-  }
+  typedef std::list<Neighbor>::const_iterator NeighborListCI;
+
+}
 
 
 #endif

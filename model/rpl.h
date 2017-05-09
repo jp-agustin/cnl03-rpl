@@ -116,8 +116,9 @@ public:
 
   /*
    * \brief Send scheduled DIO message
+   * \param infiniteRank Infinite rank for poisoning DIO
    */
-  void SendDio ();
+  void SendDio (uint16_t infiniteRank = 0);
 
   /*
    * \brief Send DIO message in response to DIS
@@ -139,6 +140,11 @@ public:
    * \param transitInformation Transit Information Option
    */
   void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation);
+
+  /*
+   * \brief DODAG Disjoin
+   */
+  void DodagDisjoin ();
 
   /*
    * \brief Insert to neighborSet
@@ -179,6 +185,11 @@ public:
    * \brief Transmit scheduled DIO
    */
   void TrickleTransmit ();
+
+  /**
+   * \brief Disable Trickle timer
+   */
+  void DisableTrickle ();
 
   virtual void NotifyInterfaceUp (uint32_t interface);
   virtual void NotifyInterfaceDown (uint32_t interface);
@@ -283,6 +294,10 @@ private:
    */
   EventId m_selectParent;
 
+  /**
+   * \brief parent select schedule event
+   */
+  EventId m_disjoin;
 
 protected:
   /**

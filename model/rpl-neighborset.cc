@@ -112,30 +112,28 @@ void RplNeighborSet::UpdateNeighbor(Ipv6Address address, Ipv6Address dodagId, ui
 
 void RplNeighborSet::ClearNeighborSet()
 {
-//  NS_LOG_FUNCTION (this);
-
-  for (NeighborList::iterator it = m_neighborList.begin ();
-       it != m_neighborList.end (); it++)
-    {
-        m_neighborList.erase (it);
-    }
+  m_prefParent = NULL;
+  m_neighborList.clear();
 }
 
 Ptr<Neighbor> RplNeighborSet::SelectParent(uint16_t rank)
 {
   NS_LOG_FUNCTION (this);
   m_neighborList.sort(SortByRank);
+
   for (NeighborList::iterator it = m_neighborList.begin ();
        it != m_neighborList.end (); it++)
     {
-    std::cout << "SelectParent ranks : " << it->GetNeighborAddress() << std::endl;
+      std::cout << "SelectParent ranks : " << it->GetNeighborAddress() << std::endl;
       if (it->GetReachable() && it->GetRank() < rank)
-      {
-        m_prefParent = &(*it);
-        std::cout << "Rank is " << m_prefParent->GetRank() << std::endl;
-        return m_prefParent;
-      }
+        {
+          m_prefParent = &(*it);
+          std::cout << "Rank is " << m_prefParent->GetRank() << std::endl;
+          return m_prefParent;
+        }
     }
+
+  m_prefParent = NULL;
   return nullptr;
 } 
 
