@@ -41,13 +41,13 @@
 #define RPL_PORT 521
 //#define ROOT_RANK 1 
 #define INFINITE_RANK 0xffff
-//#define ROOT_ADDRESS "2001:1::"
-#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
+#define ROOT_ADDRESS "2001:1::"
+//#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
 #define MOP 1
 #define OCP 1
 #define trickle 1
-#define DAO 1
+#define DAO 0
 
 #include <iostream>
 #include <cmath>
@@ -109,6 +109,8 @@ void Rpl::DoInitialize ()
 
   for (uint32_t i = 0 ; i < m_routingTable.GetIpv6()->GetNInterfaces (); i++)
   {
+    m_routingTable.GetIpv6()->SetForwarding (i, true);
+    
     for (uint32_t j = 0; j < m_routingTable.GetIpv6()->GetNAddresses (i); j++)
       {
          Ipv6InterfaceAddress address = m_routingTable.GetIpv6()->GetAddress (i, j);
@@ -141,22 +143,28 @@ void Rpl::DoInitialize ()
           Ipv6Address networkAddress = address.GetAddress ().CombinePrefix (networkMask);
           
           int ROOT_RANK;
-          if (MOP == 0)
-            ROOT_RANK = 1;
+          if (OCP == 0)
+            {
+              ROOT_RANK = 1;
+            }
           else
-            ROOT_RANK = 0;
+            {
+              ROOT_RANK = 0;
+            }
 
-          if (address.GetAddress() == (ROOT_ADDRESS))
-            //if (networkAddress == (ROOT_ADDRESS))
+          //if (address.GetAddress() == (ROOT_ADDRESS))
+          if (networkAddress == (ROOT_ADDRESS))
             {
               m_routingTable.SetRank (ROOT_RANK);
               m_routingTable.SetNodeType (true);
               m_routingTable.SetRplInstanceId (0);
               m_routingTable.SetDtsn (1);
+              //Might need to change Version Number settings to lollipop.
               m_routingTable.SetVersionNumber (1);
-              m_routingTable.SetDodagId ("2002:1::"); //Di pa ko sure kung paano nag-aaddressing.
+//              m_routingTable.SetDodagId ("2002:1::");
+              //Sets DodagId to root address.
+              m_routingTable.SetDodagId(m_routingTable.GetIpv6()->GetAddress(1,1).GetAddress());
               m_routingTable.SetFlagG (true);
-              //SendDio ();
               isRoot = 1;
               StartTrickle ();
               break;
@@ -445,7 +453,6 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
           //Add the received DIO as parent.
           InsertNeighbor (senderAddress, dioMessage.GetDodagId (), dioMessage.GetDtsn (), dioMessage.GetRank (), incomingInterface);
           m_neighborSet.SelectParent (m_routingTable.GetRank ());
-          std::cout << "Enters wrong here." << std::endl;
           m_routingTable.SetMetric(computedRank);
           m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface);
         }
@@ -492,6 +499,7 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
   
   std::cout << "This node's address is: " << m_routingTable.GetIpv6()->GetAddress(1,0) << std::endl;
   std::cout << "This node's rank is " << m_routingTable.GetRank() << std::endl;
+  std::cout << "This node's Dodag ID is " << m_routingTable.GetDodagId() << std::endl;
 }
 
 void Rpl::SendMulticastDis ()
