@@ -264,7 +264,7 @@ void RplRoutingTable::SetMetric (uint8_t metric)
 {
   m_metric = metric;
 }
-
+ 
 uint8_t RplRoutingTable::GetMetric () const
 {
   return m_metric;
@@ -397,6 +397,17 @@ bool RplRoutingTable::ClearRoutingTable ()
   SetDtsn (0);
 
   return true;
+}
+
+void RplRoutingTable::InvalidateRoute (uint32_t interface)
+{
+  for (RoutesI it = m_routes.begin (); it != m_routes.end (); it++)
+    {
+      if (it->first->GetInterface () == interface)
+        {
+          //DeleteRoute (it->first);
+        }
+    }
 }
 
 void RplRoutingTable::PrintRoutingTable ()

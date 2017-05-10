@@ -146,6 +146,11 @@ public:
    */
   void DodagDisjoin ();
 
+  /**
+   *
+   */
+  void Reboot ();
+
   /*
    * \brief Insert to neighborSet
    * \param neighborAddress neighbor address
@@ -298,6 +303,16 @@ private:
    * \brief parent select schedule event
    */
   EventId m_disjoin;
+
+  /**
+   * \brief parent select schedule event
+   */
+  EventId m_reboot;
+
+  /**
+   *
+   */
+  bool m_isRoot;
 
 protected:
   /**

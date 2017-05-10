@@ -71,6 +71,15 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 
+static void SetPositionZ (Ptr<Node> node, double x)
+{
+  Ptr<MobilityModel> mobility = node->GetObject<MobilityModel> ();
+  Vector pos = mobility->GetPosition();
+  pos.z = x;
+  mobility->SetPosition(pos);
+}
+
+
 void ReceivePacket (Ptr<Socket> socket)
 {
   while (socket->Recv ())
@@ -125,8 +134,12 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode", 
                       StringValue (phyMode));
 
+  // Multiple roots
+  NodeContainer root;
+  root.Create (1);
+  // Nodes
   NodeContainer c;
-  c.Create (6);
+  c.Create (5);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -158,6 +171,7 @@ int main (int argc, char *argv[])
                                 "ControlMode",StringValue (phyMode));
   // Set it to adhoc mode
   wifiMac.SetType ("ns3::AdhocWifiMac");
+  NetDeviceContainer devicesR = wifi.Install (wifiPhy, wifiMac, root);
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
 
   // Note that with FixedRssLossModel, the positions below are not 
@@ -165,14 +179,20 @@ int main (int argc, char *argv[])
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   positionAlloc->Add (Vector (100.0, 50.0, 0.0));
-  positionAlloc->Add (Vector (120.0, 50.0, 1500.0));
-  positionAlloc->Add (Vector (140.0, 50.0, 3000.0));
-  positionAlloc->Add (Vector (160.0, 50.0, 4500.0));
-  positionAlloc->Add (Vector (180.0, 50.0, 6000.0));
-  positionAlloc->Add (Vector (200.0, 50.0, 7500.0));
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (c);
+  mobility.Install (root);
+
+  MobilityHelper mobility2;
+  Ptr<ListPositionAllocator> positionAlloc2 = CreateObject<ListPositionAllocator> ();
+  positionAlloc2->Add (Vector (120.0, 50.0, 1500.0));
+  positionAlloc2->Add (Vector (140.0, 50.0, 3000.0));
+  positionAlloc2->Add (Vector (160.0, 50.0, 4500.0));
+  positionAlloc2->Add (Vector (180.0, 50.0, 6000.0));
+  positionAlloc2->Add (Vector (200.0, 50.0, 7500.0));
+  mobility2.SetPositionAllocator (positionAlloc2);
+  mobility2.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobility2.Install (c);
 /*
   InternetStackHelper internet;
   internet.Install (c);
@@ -182,6 +202,9 @@ int main (int argc, char *argv[])
   InternetStackHelper internetv6routers;
   internetv6routers.SetIpv4StackInstall (false);
   internetv6routers.SetRoutingHelper (RplRouting);
+
+  // Order matters for IP.
+  internetv6routers.Install (root);
   internetv6routers.Install (c);
 
 /*
@@ -193,8 +216,11 @@ int main (int argc, char *argv[])
 
   Ipv6AddressHelper ipv6;
   ipv6.SetBase (Ipv6Address ("2001:1::"), Ipv6Prefix (64));
-  Ipv6InterfaceContainer iic1 = ipv6.Assign (devices);
+  Ipv6InterfaceContainer iic1 = ipv6.Assign (devicesR);
+  ipv6.SetBase (Ipv6Address ("2002:1::"), Ipv6Prefix (64));
+  Ipv6InterfaceContainer iic2 = ipv6.Assign (devices);
   iic1.SetForwarding (0, true);
+  iic2.SetForwarding (0, true);
 
 //  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 //  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
@@ -207,22 +233,26 @@ int main (int argc, char *argv[])
 //  source->SetAllowBroadcast (true);
 //  source->Connect (remote);
 
-  uint32_t apppacketSize = 10;
-  uint32_t maxPacketCount = 5;
-  Time packetInterval = Seconds (1.);
-  Ping6Helper ping6;
+//  uint32_t packetSize = 10;
+//  uint32_t maxPacketCount = 5;
+//  Time interPacketInterval = Seconds (1.);
+  // Ping6Helper ping6;
 
-  ping6.SetLocal (iic1.GetAddress (5, 0));
-  ping6.SetRemote (iic1.GetAddress (3, 0));
-  std::cout << "Address is " << iic1.GetAddress(1,0) <<std::endl;
+  // ping6.SetLocal (iic1.GetAddress (5, 0));
+  // ping6.SetRemote (iic1.GetAddress (0, 0));
+//  std::cout << "APPLICATION LAYER-----------------------------------------------" << std::endl;
+//  std::cout << "Address is " << iic1.GetAddress(1,0) <<std::endl;
   // ping6.SetRemote (Ipv6Address::GetAllNodesMulticast ());
 
-  ping6.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
-  ping6.SetAttribute ("Interval", TimeValue (packetInterval));
-  ping6.SetAttribute ("PacketSize", UintegerValue (apppacketSize));
-  ApplicationContainer apps = ping6.Install (c.Get (5));
-  apps.Start (Seconds (30.0));
-  apps.Stop (Seconds (40.0));
+  // ping6.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
+  // ping6.SetAttribute ("Interval", TimeValue (interPacketInterval));
+  // ping6.SetAttribute ("PacketSize", UintegerValue (packetSize));
+  // ApplicationContainer apps = ping6.Install (c.Get (5));
+  // apps.Start (Seconds (60.0));
+  // apps.Stop (Seconds (70.0));
+
+  Simulator::Schedule (Seconds (5.0), &SetPositionZ, c.Get (0), 0.0);
+  Simulator::Schedule (Seconds (20.0), &SetPositionZ, c.Get (0), 1500.0);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc-line", devices);

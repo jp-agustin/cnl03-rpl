@@ -39,13 +39,13 @@
 
 #define RPL_PORT 521
 #define INFINITE_RANK 0xffff
-//#define ROOT_ADDRESS "2001:1::"
-#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
+#define ROOT_ADDRESS "2001:1::"
+//#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
-#define MOP 0
-#define OCP 1
+#define MOP 3
+#define OCP 0
 #define trickle 1
-#define DAO 0
+#define DAO 1
 
 #include <iostream>
 #include <cmath>
@@ -71,7 +71,7 @@ NS_LOG_COMPONENT_DEFINE ("Rpl");
 NS_OBJECT_ENSURE_REGISTERED (Rpl);
 
 Rpl::Rpl ()
-  : m_k(DEFAULT_DIO_REDUNDANCY_CONSTANT), m_counter(0), m_dioReceived(0)
+  : m_k(DEFAULT_DIO_REDUNDANCY_CONSTANT), m_counter(0), m_dioReceived(0), m_isRoot(0)
 {
   m_rng = CreateObject<UniformRandomVariable> ();
 }
@@ -102,8 +102,6 @@ TypeId Rpl::GetTypeId (void)
 void Rpl::DoInitialize ()
 {
   NS_LOG_FUNCTION (this);
-
-  bool isRoot = 0;
 
   for (uint32_t i = 0 ; i < m_routingTable.GetIpv6()->GetNInterfaces (); i++)
   {
@@ -141,7 +139,7 @@ void Rpl::DoInitialize ()
           Ipv6Address networkAddress = address.GetAddress ().CombinePrefix (networkMask);
           
           int ROOT_RANK;
-          if (OCP == 0)
+          if (m_routingTable.GetObjectiveCodePoint () == 0)
             {
               ROOT_RANK = 1;
             }
@@ -150,18 +148,18 @@ void Rpl::DoInitialize ()
               ROOT_RANK = 0;
             }
 
-          if (address.GetAddress() == (ROOT_ADDRESS))
-          //if (networkAddress == (ROOT_ADDRESS))
+          // if (address.GetAddress() == (ROOT_ADDRESS))
+          if (networkAddress == (ROOT_ADDRESS))
             {
               m_routingTable.SetRank (ROOT_RANK);
               m_routingTable.SetNodeType (true);
               m_routingTable.SetRplInstanceId (0);
               m_routingTable.SetDtsn (1);
               m_routingTable.SetVersionNumber (1);
-              //Sets DodagId to root address.
+              m_routingTable.SetObjectiveCodePoint (0);
               m_routingTable.SetDodagId(m_routingTable.GetIpv6()->GetAddress(1,1).GetAddress());
               m_routingTable.SetFlagG (true); 
-              isRoot = 1;
+              m_isRoot = 1;
               StartTrickle ();
               break;
             }
@@ -181,7 +179,7 @@ void Rpl::DoInitialize ()
       m_recvSocket->SetRecvPktInfo (true);
     }
 
-  if (!isRoot)
+  if (!m_isRoot)
   {
     Join ();
   }
@@ -509,9 +507,11 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
               m_sendDao = Simulator::Schedule (delayDao, &Rpl::SendDao, this);
             }
 
-          // Time delayDisjoin = Seconds (40);
-          // m_disjoin = Simulator::Schedule (delayDisjoin, &Rpl::DodagDisjoin, this);
-
+          if (m_routingTable.GetObjectiveCodePoint () == 0)
+            {
+              Time delayDisjoin = Seconds (40);
+              m_disjoin = Simulator::Schedule (delayDisjoin, &Rpl::DodagDisjoin, this);
+            }
         }
     } 
   else
@@ -584,7 +584,7 @@ void Rpl::SendDio (Ipv6Address destAddress, uint32_t incomingInterface, uint16_t
       dodagConfiguration.SetDioRedundancyConstant (DEFAULT_DIO_REDUNDANCY_CONSTANT);
       dodagConfiguration.SetMaxRankIncrease (0);
       dodagConfiguration.SetMinHopRankIncrease (DEFAULT_MIN_HOP_RANK_INCREASE);
-      dodagConfiguration.SetObjectiveCodePoint (OCP);
+      dodagConfiguration.SetObjectiveCodePoint (m_routingTable.GetObjectiveCodePoint ());
       //dodagConfiguration.SetDefaultLifetime ();
       //dodagConfiguration.SetLifetimeUnit ();
       
@@ -665,7 +665,7 @@ void Rpl::SendDio (uint16_t rank)
       dodagConfiguration.SetDioRedundancyConstant (DEFAULT_DIO_REDUNDANCY_CONSTANT);
       dodagConfiguration.SetMaxRankIncrease (0);
       dodagConfiguration.SetMinHopRankIncrease (DEFAULT_MIN_HOP_RANK_INCREASE);
-      dodagConfiguration.SetObjectiveCodePoint (OCP);
+      dodagConfiguration.SetObjectiveCodePoint (m_routingTable.GetObjectiveCodePoint ());
       //dodagConfiguration.SetDefaultLifetime ();
       //dodagConfiguration.SetLifetimeUnit ();
       
@@ -883,6 +883,30 @@ void Rpl::DodagDisjoin ()
 
   m_routingTable.ClearRoutingTable ();
   m_neighborSet.ClearNeighborSet ();
+
+  Time delay = Seconds (10);
+  m_reboot = Simulator::Schedule (delay, &Rpl::Reboot, this);
+
+}
+
+void Rpl::Reboot ()
+{
+  if (m_isRoot)
+    {
+      m_routingTable.SetRank (0);
+      m_routingTable.SetNodeType (true);
+      m_routingTable.SetRplInstanceId (0);
+      m_routingTable.SetDtsn (1);
+      m_routingTable.SetVersionNumber (1);
+      m_routingTable.SetObjectiveCodePoint (1);
+      m_routingTable.SetDodagId(m_routingTable.GetIpv6()->GetAddress(1,1).GetAddress());
+      m_routingTable.SetFlagG (true); 
+      StartTrickle ();
+    } 
+  else
+    {
+      Join ();
+    }
 }
 
 void Rpl::InsertNeighbor (Ipv6Address neighborAddress, Ipv6Address dodagID, uint8_t dtsn, uint16_t rank, 
@@ -916,7 +940,7 @@ void Rpl::SelectParent()
 {  
   m_neighborSet.SelectParent (m_routingTable.GetRank ());
 
-  if (OCP == 0) //OF0
+  if (m_routingTable.GetObjectiveCodePoint () == 0) //OF0
     {
       if (m_neighborSet.GetParent ())
         {
@@ -925,7 +949,7 @@ void Rpl::SelectParent()
         }
     }  
 
-  if (OCP == 1) //MHROF
+  if (m_routingTable.GetObjectiveCodePoint () == 1) //MHROF
     {
       if (m_neighborSet.GetParent ())
         {
@@ -1003,6 +1027,8 @@ void Rpl::RestartInterval ()
 
 void Rpl::TrickleTransmit ()
 {
+  Ipv6InterfaceAddress address = m_routingTable.GetIpv6()->GetAddress (1, 0);
+
   std::cout << "-----------TrickleTransmit-----------\n";
   if (m_counter < DEFAULT_DIO_REDUNDANCY_CONSTANT || DEFAULT_DIO_REDUNDANCY_CONSTANT == 0)
     {
@@ -1031,6 +1057,7 @@ void Rpl::DoDispose ()
 
   m_routingTable.PrintRoutingTable ();
   std::cout << "Rank: " << m_routingTable.GetRank () << "\n";
+  std::cout << "DODAG ID: " << m_routingTable.GetDodagId () << "\n";
 
   m_routingTable.ClearRoutingTable ();
   m_neighborSet.ClearNeighborSet ();

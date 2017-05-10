@@ -308,6 +308,12 @@ public:
   bool ClearRoutingTable ();
 
   /**
+   * \brief 
+   * \param interface the interface
+   */
+  void InvalidateRoute (uint32_t interface);
+
+  /**
    * \brief Prints the routing table
    */
   void PrintRoutingTable ();
