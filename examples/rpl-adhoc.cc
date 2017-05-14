@@ -71,6 +71,14 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 
+// static void SetPositionZ (Ptr<Node> node, double x)
+// {
+//   Ptr<MobilityModel> mobility = node->GetObject<MobilityModel> ();
+//   Vector pos = mobility->GetPosition();
+//   pos.z = x;
+//   mobility->SetPosition(pos);
+// }  
+
 void ReceivePacket (Ptr<Socket> socket)
 {
   while (socket->Recv ())
@@ -92,6 +100,11 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
     {
       socket->Close ();
     }
+}
+
+void TearDownLink (Ptr<Node> nodeA, uint32_t interfaceA)
+{
+  nodeA->GetObject<Ipv6> ()->SetDown (interfaceA);
 }
 
 
@@ -129,7 +142,7 @@ int main (int argc, char *argv[])
   NodeContainer root;
   root.Create (1);
   NodeContainer c;
-  c.Create (4);
+  c.Create (5);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -176,6 +189,7 @@ int main (int argc, char *argv[])
   MobilityHelper mobility2;
   Ptr<ListPositionAllocator> positionAlloc2 = CreateObject<ListPositionAllocator> ();
   positionAlloc2->Add (Vector (100.0, 80.0, 1500.0));
+  positionAlloc2->Add (Vector (80.0, 80.0, 1500.0));
   positionAlloc2->Add (Vector (80.0, 100.0, 2250.0));
   positionAlloc2->Add (Vector (120.0, 100.0, 3000.0));
   positionAlloc2->Add (Vector (140.0, 100.0, 4500.0));
@@ -240,6 +254,8 @@ int main (int argc, char *argv[])
   apps.Start (Seconds (2.0));
   apps.Stop (Seconds (10.0)); 
 */
+  Simulator::Schedule (Seconds (70), &TearDownLink, c.Get(1), 1);
+  //Simulator::Schedule (Seconds (10.0), &SetPositionZ, c.Get (1), -2000.0);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc", devices);

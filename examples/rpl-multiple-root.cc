@@ -94,6 +94,11 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
     }
 }
 
+void TearDownLink (Ptr<Node> nodeA, uint32_t interfaceA)
+{
+  nodeA->GetObject<Ipv6> ()->SetDown (interfaceA);
+}
+
 
 int main (int argc, char *argv[])
 {
@@ -249,6 +254,8 @@ int main (int argc, char *argv[])
   apps.Start (Seconds (3.0));
   apps.Stop (Seconds (10.0));
 */
+
+  //Simulator::Schedule (Seconds (50), &TearDownLink, c.Get(2), 1);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc-line", devices);

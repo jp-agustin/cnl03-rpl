@@ -139,7 +139,18 @@ public:
    * \param targetOption Target Option
    * \param transitInformation Transit Information Option
    */
-  void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation);
+  void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort);
+
+  /**
+   * \brief Receive DAO-ACK messages
+   * \param daoAckMessage DAO-ACK Message
+   */
+  void RecvDaoAck (RplDaoAckMessage daoAckMessage);
+
+  /**
+   * \brief Check for DAO-ACK
+   */
+  void DaoAckCheck ();
 
   /*
    * \brief DODAG Disjoin
@@ -147,7 +158,7 @@ public:
   void DodagDisjoin ();
 
   /**
-   *
+   * \brief Reboot network
    */
   void Reboot ();
 
@@ -220,6 +231,16 @@ private:
   typedef std::map<Ptr<Socket>, uint32_t>::const_iterator SocketListCI;
 
   /**
+   * \brief Interface address
+   */
+  Ipv6InterfaceAddress m_address;
+
+  /**
+   * \brief Network address of the node
+   */ 
+  Ipv6Address m_networkAddress;
+
+  /**
    * \brief socket list
    */
   SocketList m_sendSocketList;
@@ -257,7 +278,7 @@ private:
   /**
    * \brief the counter
    */
-  uint8_t m_counter; //not sure sa size
+  uint8_t m_counter;
 
   /**
    * \brief the current interval size
@@ -300,19 +321,39 @@ private:
   EventId m_selectParent;
 
   /**
-   * \brief parent select schedule event
+   * \brief DODAG disjoin schedule event
    */
   EventId m_disjoin;
 
   /**
-   * \brief parent select schedule event
+   * \brief Network Reboot
    */
   EventId m_reboot;
 
   /**
-   *
+   * \brief Node type: 1 - root
    */
   bool m_isRoot;
+
+  /**
+   * \brief DAO-ACK receive
+   */
+  bool m_daoAck;
+
+  /**
+   * \brief DAO-ACK count
+   */
+  uint32_t m_daoAckCount;
+
+  /**
+   * \brief Check for DAO-ACK
+   */
+  EventId m_daoAckCheck;
+
+  /**
+   * \brief NOtify node if down
+   */  
+  bool m_notifyDown;
 
 protected:
   /**
