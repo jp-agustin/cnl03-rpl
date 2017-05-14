@@ -71,7 +71,7 @@ NS_LOG_COMPONENT_DEFINE ("Rpl");
 NS_OBJECT_ENSURE_REGISTERED (Rpl);
 
 Rpl::Rpl ()
-  : m_k(DEFAULT_DIO_REDUNDANCY_CONSTANT), m_counter(0), m_dioReceived(0), m_isRoot(0), m_daoAck(0), m_daoAckCount(1), m_notifyDown(0)
+  : m_k(DEFAULT_DIO_REDUNDANCY_CONSTANT), m_counter(0), m_dioReceived(0), m_isRoot(0), m_daoAck(0), m_daoAckCount(3), m_notifyDown(0)
 {
   m_rng = CreateObject<UniformRandomVariable> ();
 }
@@ -453,19 +453,9 @@ void Rpl::RecvDio (RplDioMessage dioMessage, RplDodagConfigurationOption dodagCo
                               m_sendDao.Cancel ();
                             }
 
-                          if (m_daoAckCheck.IsRunning ())
-                            {
-                              m_daoAckCheck.Cancel ();
-                            }
-
                           Time delayDao = Seconds (5);
                           m_sendDao = Simulator::Schedule (delayDao, &Rpl::SendDao, this);
 
-                          if (MOP == 3)
-                            {
-                              Time daoAckCheck = Seconds (6);                          
-                              m_daoAckCheck = Simulator::Schedule (daoAckCheck, &Rpl::DaoAckCheck, this);
-                            }
                         }
                     }
                 }
@@ -741,6 +731,17 @@ void Rpl::SendDio (uint16_t rank)
 
 void Rpl::SendDao ()
 {
+  if (m_daoAckCheck.IsRunning ())
+    {
+      m_daoAckCheck.Cancel ();
+    }
+
+  if (MOP == 3)
+    {
+      Time daoAckCheck = Seconds (2);                          
+      m_daoAckCheck = Simulator::Schedule (daoAckCheck, &Rpl::DaoAckCheck, this);
+    }
+
   std::cout << "Sending DAO\n";
   Ptr<Packet> p = Create<Packet>();
   Ptr<Socket> sendingSocket;
@@ -951,11 +952,19 @@ void Rpl::DaoAckCheck ()
 
   if (m_daoAck == false) 
     {
+      std::cout << "DAO-ACK not received\n";
       m_daoAckCount -= 1;
+
+      if (m_sendDao.IsRunning ())
+        {
+          m_sendDao.Cancel ();
+        }
+
+      SendDao ();
     }
   else
     {
-      m_daoAckCount = 1;
+      m_daoAckCount = 3;
       m_daoAck = false;
     }
 
@@ -963,10 +972,11 @@ void Rpl::DaoAckCheck ()
     {
       std::cout << "DAO-ACK error - Parent: " << m_neighborSet.GetParentAddress () << "\n";
 
+      DisableTrickle ();
       m_routingTable.ClearRoutingTable ();
-      //ResetTrickle ();      
+            
       Join ();
-      m_daoAckCount = 1;
+      m_daoAckCount = 3;
       m_daoAck = false;
     }
 

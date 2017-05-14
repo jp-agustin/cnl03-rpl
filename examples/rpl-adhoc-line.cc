@@ -71,13 +71,13 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 
-static void SetPositionZ (Ptr<Node> node, double x)
-{
-  Ptr<MobilityModel> mobility = node->GetObject<MobilityModel> ();
-  Vector pos = mobility->GetPosition();
-  pos.z = x;
-  mobility->SetPosition(pos);
-}
+// static void SetPositionZ (Ptr<Node> node, double x)
+// {
+//   Ptr<MobilityModel> mobility = node->GetObject<MobilityModel> ();
+//   Vector pos = mobility->GetPosition();
+//   pos.z = x;
+//   mobility->SetPosition(pos);
+// }
 
 
 void ReceivePacket (Ptr<Socket> socket)
@@ -251,8 +251,8 @@ int main (int argc, char *argv[])
   // apps.Start (Seconds (60.0));
   // apps.Stop (Seconds (70.0));
 
-  Simulator::Schedule (Seconds (5.0), &SetPositionZ, c.Get (0), 0.0);
-  Simulator::Schedule (Seconds (20.0), &SetPositionZ, c.Get (0), 1500.0);
+  //Simulator::Schedule (Seconds (5.0), &SetPositionZ, c.Get (0), 0.0);
+  //Simulator::Schedule (Seconds (20.0), &SetPositionZ, c.Get (0), 1500.0);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc-line", devices);

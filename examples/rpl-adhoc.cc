@@ -142,7 +142,7 @@ int main (int argc, char *argv[])
   NodeContainer root;
   root.Create (1);
   NodeContainer c;
-  c.Create (5);
+  c.Create (7);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -181,18 +181,20 @@ int main (int argc, char *argv[])
   // used for received signal strength. 
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-  positionAlloc->Add (Vector (100.0, 50.0, 0.0));
+  positionAlloc->Add (Vector (100.0, 20.0, 0.0));
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (root);
 
   MobilityHelper mobility2;
   Ptr<ListPositionAllocator> positionAlloc2 = CreateObject<ListPositionAllocator> ();
-  positionAlloc2->Add (Vector (100.0, 80.0, 1500.0));
-  positionAlloc2->Add (Vector (80.0, 80.0, 1500.0));
-  positionAlloc2->Add (Vector (80.0, 100.0, 2250.0));
-  positionAlloc2->Add (Vector (120.0, 100.0, 3000.0));
-  positionAlloc2->Add (Vector (140.0, 100.0, 4500.0));
+  positionAlloc2->Add (Vector (40.0, 80.0, 1050.0));
+  positionAlloc2->Add (Vector (90.0, 70.0, 1650.0));
+  positionAlloc2->Add (Vector (150.0, 90.0, 1650.0));
+  positionAlloc2->Add (Vector (0.0, 120.0, 2200.0));
+  positionAlloc2->Add (Vector (75.0, 130.0, 2200.0));
+  positionAlloc2->Add (Vector (130.0, 160.0, 2700.0));
+  positionAlloc2->Add (Vector (160.0, 150.0, 3400.0));
   mobility2.SetPositionAllocator (positionAlloc2);
   mobility2.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility2.Install (c);
@@ -254,7 +256,7 @@ int main (int argc, char *argv[])
   apps.Start (Seconds (2.0));
   apps.Stop (Seconds (10.0)); 
 */
-  Simulator::Schedule (Seconds (70), &TearDownLink, c.Get(1), 1);
+  Simulator::Schedule (Seconds (200), &TearDownLink, c.Get(1), 1);
   //Simulator::Schedule (Seconds (10.0), &SetPositionZ, c.Get (1), -2000.0);
 
   // Tracing
