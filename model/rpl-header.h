@@ -555,6 +555,188 @@ private:
   Ipv6Address m_dodagId;
 };
 
+/*
+*  \brief (DAO-ACK Base Object) Format
+   \verbatim
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  | RPLInstanceID |D| Reserved  |    DAOSequence  |    Status     |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                                                               |
+  +                                                               +
+  |                           DODAGID*                            |
+  +                                                               +
+  |                                                               |
+  +                                                               +
+  |                                                               |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  | Option(s)...
+  +-+-+-+-+-+-+-+
+  \endverbatim
+ */
+
+class RplDaoAckMessage : public Icmpv6Header
+{
+
+public:
+  /**
+   * \brief Constructor.
+   */
+  RplDaoAckMessage ();
+
+  /**
+   * \brief Destructor.
+   */
+  virtual ~RplDaoAckMessage ();
+
+  /**
+   * \brief Get the UID of this class.
+   * \return UID
+   */
+  static TypeId GetTypeId ();
+
+  /**
+   * \brief Get the instance type ID.
+   * \return instance type ID
+   */
+  virtual TypeId GetInstanceTypeId () const;
+
+
+  /**
+   * \brief Print informations.
+   * \param os output stream
+   */
+  virtual void Print (std::ostream& os) const;
+
+  /**
+   * \brief Get the serialized size.
+   * \return serialized size
+   */
+  virtual uint32_t GetSerializedSize () const;
+
+  /**
+   * \brief Serialize the packet.
+   * \param start start offset
+   */
+  virtual void Serialize (Buffer::Iterator start) const;
+
+  /**
+   * \brief Deserialize the packet.
+   * \param start start offset
+   * \return length of packet
+   */
+  virtual uint32_t Deserialize (Buffer::Iterator start);
+
+
+  /**
+   * \brief Get the d flag.
+   * \return d flag
+   */
+  bool GetFlagD () const;
+
+  /**
+   * \brief Set the d flag.
+   * \param d value
+   */
+  void SetFlagD (bool d);
+
+  /**
+   * \brief Get status.
+   * \return the status value
+   */
+  uint8_t GetStatus () const;
+
+  /**
+   * \brief Set status.
+   * \param f the flags status
+   */
+  void SetStatus (uint8_t status);
+
+  /**
+   * \brief Get rpl instance id.
+   * \return the rpl instance id value
+   */
+  uint8_t GetRplInstanceId () const;
+
+  /**
+   * \brief Set rpl instance id.
+   * \param r the rpl instance id value
+   */
+  void SetRplInstanceId (uint8_t rplinstanceid);  
+
+  /**
+   * \brief Get reserved.
+   * \return the reserved value
+   */
+  uint8_t GetReserved () const;
+
+  /**
+   * \brief Set reserved.
+   * \param reserved the reserved value
+   */
+  void SetReserved (uint8_t reserved);
+
+  /**
+   * \brief Get DAO Sequence.
+   * \return the DAO sequnce value
+   */
+  uint8_t GetDaoSequence () const;
+
+  /**
+   * \brief Set DAO sequence.
+   * \param sequence the DAO sequence value
+   */
+  void SetDaoSequence (uint8_t sequence);
+
+  /**
+   * \brief Get DODAG ID.
+   * \return the DODAG ID value
+   */
+  Ipv6Address GetDodagId () const;
+
+  /**
+   * \brief Set DODAG ID.
+   * \param dodagId the DODAG ID value
+   */
+  void SetDodagId (Ipv6Address dodagId);
+
+
+
+private:
+
+  /**
+   * \brief The D flag.
+   */
+  bool m_flagD;
+
+  /**
+   * \brief The flags field value.
+   */
+  uint8_t m_status;
+
+  /**
+   * \brief The RPL Instance ID field value.
+   */
+  uint8_t m_rplInstanceId;
+ 
+ /**
+   * \brief The reserved field value.
+   */
+  uint8_t m_reserved;
+
+  /**
+   * \brief The dao sequence field value.
+   */
+  uint8_t m_daoSequence;
+
+  /**
+   * \brief The DODAG ID.
+   */
+  Ipv6Address m_dodagId;
+};
+
+
 }
 
 #endif

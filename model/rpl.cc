@@ -44,10 +44,10 @@
 #define ROOT_ADDRESS "2001:1::"
 //#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
-#define MOP 1
+#define MOP 3
 #define OCP 1
 #define trickle 1
-#define DAO 0
+#define DAO 1
 
 #include <iostream>
 #include <cmath>
@@ -656,11 +656,18 @@ void Rpl::SendDio ()
         }
 
       SocketListI iter = m_sendSocketList.begin ();
-      sendingSocket = iter->first;
 
-      NS_LOG_DEBUG ("SendTo: " << *p);
+      if(sendingSocket = iter->first)
+        {
 
-      sendingSocket->SendTo (p, 0, Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT));
+        NS_LOG_DEBUG ("SendTo: " << *p);
+
+        sendingSocket->SendTo (p, 0, Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT));
+        }
+      else 
+        {
+          std::cout << "No sending socket." << std::endl;
+        }
     }
   else 
     {
@@ -1013,7 +1020,7 @@ void Rpl::DoDispose ()
 
 void Rpl::NotifyInterfaceUp (uint32_t i)
 {
-  std::cout << "Enters Interface Up." << std::endl;
+  std::cout << "Enters Interface Up: " << i << std::endl;
   NS_LOG_FUNCTION (this << i);
 
   for (uint32_t j = 0; j < m_routingTable.GetIpv6()->GetNAddresses (i); j++)
@@ -1033,7 +1040,34 @@ void Rpl::NotifyInterfaceUp (uint32_t i)
 
 void Rpl::NotifyInterfaceDown (uint32_t interface)
 {
-  std::cout <<"Interface down." << std::endl;
+  std::cout <<"Interface down." << "# " << interface << std::endl;
+
+  // for (RoutesI it = m_routes.begin (); it != m_routes.end (); it++)
+  //   {
+  //     if (it->first->GetInterface () == interface)
+  //       {
+  //         // InvalidateRoute (it->first);
+  //         std::cout << "#" << interface << " interface down." << std::endl;
+  //       }
+  //   }
+
+  for (SocketListI iter = m_sendSocketList.begin (); iter != m_sendSocketList.end (); iter++ )
+    {
+      NS_LOG_INFO ("Checking socket for interface " << interface);
+      if (iter->second == interface)
+        {
+          NS_LOG_INFO ("Removed socket for interface " << interface);
+          iter->first->Close ();
+          m_sendSocketList.erase (iter);
+          break;
+        }
+    }
+
+  // if (m_interfaceExclusions.find (interface) == m_interfaceExclusions.end ())
+  //   {
+  //     SendTriggeredRouteUpdate ();
+  //   }
+
 }
 
 void Rpl::NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address)

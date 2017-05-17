@@ -561,4 +561,171 @@ void RplDaoMessage::SetDodagId (Ipv6Address dodagId)
 
 }
 
+NS_OBJECT_ENSURE_REGISTERED(RplDaoAckMessage);
+
+TypeId RplDaoAckMessage::GetTypeId ()
+{
+  static TypeId tid = TypeId ("ns3::RplDaoAckMessage")
+    .SetParent<Icmpv6Header> ()
+    .SetGroupName ("rpl")
+    .AddConstructor<RplDaoAckMessage> ()
+  ;
+  return tid;
+}
+
+TypeId RplDaoAckMessage::GetInstanceTypeId () const
+{
+  NS_LOG_FUNCTION (this);
+  return GetTypeId ();
+}
+
+RplDaoAckMessage::RplDaoAckMessage()
+{
+  NS_LOG_FUNCTION (this);
+  SetType (155);
+  SetCode (3);
+  SetStatus (0);
+  SetFlagD (0);
+  SetReserved (0);
+  SetDaoSequence(0);
+  SetRplInstanceId(0);
+}
+
+RplDaoAckMessage::~RplDaoAckMessage ()
+{
+  NS_LOG_FUNCTION(this);
+}
+
+void RplDaoAckMessage::Print (std::ostream& os) const
+{
+  NS_LOG_FUNCTION (this << &os);
+  os << "( type = " << (uint32_t)GetType () << " (Rpl) code = " << (uint32_t)GetCode () << " checksum = " << (uint32_t)GetChecksum () << ")";
+}
+
+uint32_t RplDaoAckMessage::GetSerializedSize () const
+{
+  NS_LOG_FUNCTION (this);
+  return 24; //Not including options.
+}
+
+void RplDaoAckMessage::Serialize (Buffer::Iterator start) const
+{
+  NS_LOG_FUNCTION (this << &start);
+  uint8_t buff_dodagId[16];
+  Buffer::Iterator i = start;
+  uint8_t flags = 0; //reserved field
+
+
+  i.WriteU8 (GetType ());
+  i.WriteU8 (GetCode ());
+
+  if (m_flagD)
+    {
+      flags |= (uint8_t)(1 << 7);
+    }
+
+
+  i.WriteU8 (flags);
+  i.WriteU8 (m_status);
+  i.WriteU8 (m_daoSequence);
+  i.WriteU8 (m_rplInstanceId);
+  m_dodagId.Serialize (buff_dodagId);
+  i.Write (buff_dodagId, 16);
+}
+
+uint32_t RplDaoAckMessage::Deserialize (Buffer::Iterator start)
+{
+  NS_LOG_FUNCTION (this << &start);
+  uint8_t buf[16];
+  Buffer::Iterator i = start;
+
+  SetType (i.ReadU8 ());
+  SetCode (i.ReadU8 ());
+  m_reserved = i.ReadU8 ();
+  m_status = i.ReadU8 ();
+  m_daoSequence = i.ReadU8 ();
+  m_rplInstanceId = i.ReadU8 ();
+  i.Read (buf, 16);
+  m_dodagId.Set (buf);
+
+
+  return GetSerializedSize();
+}
+
+bool RplDaoAckMessage::GetFlagD () const
+{
+  NS_LOG_FUNCTION(this);
+  return m_flagD;
+}
+
+void RplDaoAckMessage::SetFlagD (bool d)
+{
+  NS_LOG_FUNCTION(this << d);
+  m_flagD = d;
+}
+
+uint8_t RplDaoAckMessage::GetRplInstanceId () const
+{
+  NS_LOG_FUNCTION(this);
+  return m_rplInstanceId;
+}
+
+void RplDaoAckMessage::SetRplInstanceId (uint8_t rplinstanceid)
+{
+  NS_LOG_FUNCTION(this << rplinstanceid);
+  m_rplInstanceId = rplinstanceid;
+}
+
+uint8_t RplDaoAckMessage::GetStatus () const
+{
+  NS_LOG_FUNCTION(this);
+  return m_status;
+}
+
+void RplDaoAckMessage::SetStatus (uint8_t status)
+{
+  NS_LOG_FUNCTION(this << status);
+  m_status = status;
+}
+
+
+uint8_t RplDaoAckMessage::GetReserved () const
+{
+  NS_LOG_FUNCTION(this);
+  return m_reserved;
+}
+
+void RplDaoAckMessage::SetReserved (uint8_t reserved)
+{
+  NS_LOG_FUNCTION(this << reserved);
+  m_reserved = reserved;
+}
+
+uint8_t RplDaoAckMessage::GetDaoSequence () const
+{
+  NS_LOG_FUNCTION(this);
+  return m_daoSequence;
+}
+
+
+void RplDaoAckMessage::SetDaoSequence (uint8_t sequence)
+{
+  NS_LOG_FUNCTION(this << sequence);
+  m_daoSequence = sequence;
+}
+
+Ipv6Address RplDaoAckMessage::GetDodagId () const
+{
+  NS_LOG_FUNCTION(this);
+  return m_dodagId;
+}
+
+void RplDaoAckMessage::SetDodagId (Ipv6Address dodagId)
+{
+  NS_LOG_FUNCTION(this << dodagId);
+  m_dodagId = dodagId;
+
+}
+
+
 }
