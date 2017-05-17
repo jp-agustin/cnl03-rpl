@@ -41,9 +41,8 @@
 #define RPL_PORT 521
 #define INFINITE_RANK 0xffff
 #define ROOT_ADDRESS "2001:1::"
-//#define ROOT_ADDRESS "2001:1::200:ff:fe00:1"
 
-#define MOP 1
+#define MOP 3
 #define OCP 0
 #define trickle 1
 #define reboot 0
@@ -804,6 +803,8 @@ void Rpl::SendDao ()
       transitInformation.SetParentAddress (m_neighborSet.GetParentAddress ());
 
       rplOption.SetFlagO (0);
+      rplOption.SetFlagR (0);
+      rplOption.SetFlagF (0);
       rplOption.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
       rplOption.SetSenderRank (m_routingTable.GetRank ());
 
@@ -863,7 +864,7 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
         }
     }
 
-  if (rplOption.GetFlagO () == 0 && (m_routingTable.GetRank () < rplOption.GetSenderRank ()))
+  if ((uint32_t)rplOption.GetFlagO () == 0 && (m_routingTable.GetRank () < rplOption.GetSenderRank ()))
     { 
       if (m_neighborSet.GetParentAddress () == "::")
         {
@@ -935,56 +936,65 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
             }
         }
 
-      if (MOP == 3)
-        {
-          if ((uint32_t) daoMessage.GetFlags () == 128)
-            {
-              Ptr<Packet> packet = Create<Packet>();
-              RplDaoAckMessage daoAckMessage;
+        if (MOP == 3)
+          {
+            if ((uint32_t) daoMessage.GetFlags () == 128)
+              {
+                Ptr<Packet> packet = Create<Packet>();
+                RplDaoAckMessage daoAckMessage;
 
-              Icmpv6Header daoAck;
-              daoAck.SetType (155);
-              daoAck.SetCode (3);
+                Icmpv6Header daoAck;
+                daoAck.SetType (155);
+                daoAck.SetCode (3);
 
-              daoAckMessage.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
-              daoAckMessage.SetDodagId (m_routingTable.GetDodagId ());
+                daoAckMessage.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
+                daoAckMessage.SetDodagId (m_routingTable.GetDodagId ());
 
-              RplOption rplOptionDaoAck;
-              rplOptionDaoAck.SetFlagO (1);
-              rplOptionDaoAck.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
-              rplOptionDaoAck.SetSenderRank (m_routingTable.GetRank ());
+                RplOption rplOptionDaoAck;
+                rplOptionDaoAck.SetFlagO (1);
+                rplOptionDaoAck.SetFlagR (0);
+                rplOptionDaoAck.SetFlagF (0);
+                rplOptionDaoAck.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
+                rplOptionDaoAck.SetSenderRank (m_routingTable.GetRank ());
 
-              packet->AddHeader(rplOptionDaoAck);
-              packet->AddHeader(daoAckMessage);
-              packet->AddHeader(daoAck);
-              
-              if (!m_notifyDown)
-                {
-                  std::cout << "Sending DAO-ACK\n";
-                  sendingSocket->SendTo (packet, 0, Inet6SocketAddress (senderAddress, senderPort));
-                }
-            }            
-        }
+                packet->AddHeader(rplOptionDaoAck);
+                packet->AddHeader(daoAckMessage);
+                packet->AddHeader(daoAck);
+                
+                if (!m_notifyDown)
+                  {
+                    std::cout << "Sending DAO-ACK\n";
+                    sendingSocket->SendTo (packet, 0, Inet6SocketAddress (senderAddress, senderPort));
+                  }
+              }            
+          }
     }
   else
     {
-      std::cout << "LOOP DETECTED\n";
-      ResetTrickle ();
+      std::cout << "LOOP DETECTED - DAO\n";
+      if (m_rankErrorCount < MAX_RPL_OPTION_RANK_ERRORS)
+        {
+          ResetTrickle ();
+          m_rankErrorCount++;
+        }
     }
 
 }
 
 void Rpl::RecvDaoAck (RplDaoAckMessage daoAckMessage, RplOption rplOption)
 {
-  if (rplOption.GetFlagO () == 1 && (m_routingTable.GetRank ()) > rplOption.GetSenderRank ())
+  if ((uint32_t)rplOption.GetFlags () == 128 && (m_routingTable.GetRank ()) > rplOption.GetSenderRank ())
     {
       m_daoAck = true;
       std::cout << "DAO-ACK received\n";
     }
   else
     {
-      std::cout << "LOOP DETECTED\n";
-      ResetTrickle ();
+      if (m_rankErrorCount < MAX_RPL_OPTION_RANK_ERRORS)
+        {
+          ResetTrickle ();
+          m_rankErrorCount++;
+        }
     }
 }
 

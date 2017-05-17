@@ -356,9 +356,14 @@ private:
   EventId m_daoAckCheck;
 
   /**
-   * \brief NOtify node if down
+   * \brief Notify node if down
    */  
   bool m_notifyDown;
+
+  /**
+   * \brief Rank error count
+   */
+  uint32_t m_rankErrorCount;
 
 protected:
   /**
