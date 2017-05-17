@@ -138,14 +138,19 @@ public:
    * \param daoMessage DAO Message
    * \param targetOption Target Option
    * \param transitInformation Transit Information Option
+   * \param rplOption RPL Option
+   * \param senderAddress the Sender Address
+   * \param incomingInterface incoming interface
+   * \param senderPort sender port
    */
-  void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort);
+  void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation, RplOption rplOption, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort);
 
   /**
    * \brief Receive DAO-ACK messages
    * \param daoAckMessage DAO-ACK Message
+   * \param rplOption RPL Option
    */
-  void RecvDaoAck (RplDaoAckMessage daoAckMessage);
+  void RecvDaoAck (RplDaoAckMessage daoAckMessage, RplOption rplOption);
 
   /**
    * \brief Check for DAO-ACK

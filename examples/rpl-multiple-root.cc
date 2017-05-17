@@ -255,7 +255,7 @@ int main (int argc, char *argv[])
   apps.Stop (Seconds (10.0));
 */
 
-  Simulator::Schedule (Seconds (50), &TearDownLink, c.Get(2), 1);
+  //Simulator::Schedule (Seconds (50), &TearDownLink, c.Get(2), 1);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc-line", devices);

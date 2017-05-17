@@ -256,7 +256,7 @@ int main (int argc, char *argv[])
   apps.Start (Seconds (2.0));
   apps.Stop (Seconds (10.0)); 
 */
-  Simulator::Schedule (Seconds (200), &TearDownLink, c.Get(1), 1);
+  //Simulator::Schedule (Seconds (200), &TearDownLink, c.Get(1), 1);
   //Simulator::Schedule (Seconds (10.0), &SetPositionZ, c.Get (1), -2000.0);
 
   // Tracing
