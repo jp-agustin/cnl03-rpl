@@ -561,6 +561,29 @@ void RplDaoMessage::SetDodagId (Ipv6Address dodagId)
 
 }
 
+
+/*
+*  \brief (DAO-ACK Base Object) Format
+   \verbatim
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  | RPLInstanceID |D| Reserved  |    DAOSequence  |    Status     |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                                                               |
+  +                                                               +
+  |                           DODAGID*                            |
+  +                                                               +
+  |                                                               |
+  +                                                               +
+  |                                                               |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  | Option(s)...
+  +-+-+-+-+-+-+-+
+  \endverbatim
+ */
+
+
 NS_OBJECT_ENSURE_REGISTERED(RplDaoAckMessage);
 
 TypeId RplDaoAckMessage::GetTypeId ()
@@ -726,6 +749,5 @@ void RplDaoAckMessage::SetDodagId (Ipv6Address dodagId)
   m_dodagId = dodagId;
 
 }
-
 
 }

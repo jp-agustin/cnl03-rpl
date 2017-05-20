@@ -40,6 +40,11 @@ RplRoutingTableEntry::RplRoutingTableEntry ()
 {
 }
 
+RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, Ipv6Prefix networkPrefix, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse)
+  : Ipv6RoutingTableEntry ( RplRoutingTableEntry::CreateNetworkRouteTo (network, networkPrefix, nextHop, interface, prefixToUse) )
+{
+}
+
 RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, uint32_t interface, Ipv6Address nextHop, Ipv6Address dest)
   : m_daoSender(network), m_nextHop(nextHop), m_dest(dest), m_interface(interface)
 {
@@ -342,6 +347,21 @@ bool RplRoutingTable::AddNetworkRouteTo (Ipv6Address network, uint32_t interface
   m_routes.push_back (std::make_pair (route, EventId ()));
   return true;
 }
+
+void RplRoutingTable::AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix networkPrefix, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse)
+{
+  NS_LOG_FUNCTION (this << network << networkPrefix << nextHop << interface << prefixToUse);
+
+  if (nextHop.IsLinkLocal())
+    {
+      NS_LOG_WARN ("Rpl::AddNetworkRouteTo - Next hop should be link-local");
+    }
+
+  RplRoutingTableEntry* route = new RplRoutingTableEntry (network, networkPrefix, nextHop, interface, prefixToUse);
+
+  m_routes.push_back (std::make_pair (route, EventId ()));
+}
+
 
 bool RplRoutingTable::DeleteRoute (RplRoutingTableEntry *route)
 {

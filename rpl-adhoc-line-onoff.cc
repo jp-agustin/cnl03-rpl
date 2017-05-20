@@ -62,6 +62,9 @@
 #include "ns3/rpl-module.h"
 #include "ns3/internet-apps-module.h"
 
+#include "ns3/applications-module.h"
+
+#include <sstream>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -71,13 +74,13 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 
-static void SetPositionZ (Ptr<Node> node, double x)
-{
-  Ptr<MobilityModel> mobility = node->GetObject<MobilityModel> ();
-  Vector pos = mobility->GetPosition();
-  pos.z = x;
-  mobility->SetPosition(pos);
-}
+// static void SetPositionZ (Ptr<Node> node, double x)
+// {
+//   Ptr<MobilityModel> mobility = node->GetObject<MobilityModel> ();
+//   Vector pos = mobility->GetPosition();
+//   pos.z = x;
+//   mobility->SetPosition(pos);
+// }
 
 
 void ReceivePacket (Ptr<Socket> socket)
@@ -103,16 +106,23 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
     }
 }
 
+void TearDownLink (Ptr<Node> nodeA, Ptr<Node> nodeB, uint32_t interfaceA, uint32_t interfaceB)
+{
+  nodeA->GetObject<Ipv6> ()->SetDown (interfaceA);
+  nodeB->GetObject<Ipv6> ()->SetDown (interfaceB);
+}
+
+
 
 int main (int argc, char *argv[])
 {
   std::string phyMode ("DsssRate1Mbps");
   double rss = -80;  // -dBm
-  uint32_t packetSize = 1000; // bytes
+  uint32_t packetSize = 64; // bytes
   uint32_t numPackets = 1;
   double interval = 1.0; // seconds
   bool verbose = false;
-
+  std::string rate = "0.512kbps";
   CommandLine cmd;
 
   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
@@ -124,7 +134,7 @@ int main (int argc, char *argv[])
 
   cmd.Parse (argc, argv);
   // Convert to time object
-  Time interPacketInterval = Seconds (interval);
+//  Time interPacketInterval = Seconds (interval);
 
   // disable fragmentation for frames below 2200 bytes
   Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
@@ -199,9 +209,13 @@ int main (int argc, char *argv[])
 */
 
   RplHelper RplRouting;
+
+  Ipv6ListRoutingHelper listRH;
+  listRH.Add (RplRouting, 0);
+
   InternetStackHelper internetv6routers;
   internetv6routers.SetIpv4StackInstall (false);
-  internetv6routers.SetRoutingHelper (RplRouting);
+  internetv6routers.SetRoutingHelper (listRH);
 
   // Order matters for IP.
   internetv6routers.Install (root);
@@ -221,6 +235,8 @@ int main (int argc, char *argv[])
   Ipv6InterfaceContainer iic2 = ipv6.Assign (devices);
   iic1.SetForwarding (0, true);
   iic2.SetForwarding (0, true);
+  // iic1.SetForwarding (1, true);
+  // iic2.SetForwarding (1, true);
 
 //  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 //  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
@@ -233,26 +249,27 @@ int main (int argc, char *argv[])
 //  source->SetAllowBroadcast (true);
 //  source->Connect (remote);
 
-//  uint32_t packetSize = 10;
-//  uint32_t maxPacketCount = 5;
-//  Time interPacketInterval = Seconds (1.);
+  // uint32_t packetSize = 10;
+  // uint32_t maxPacketCount = 1000;
+  // Time interPacketInterval = Seconds (1);
   // Ping6Helper ping6;
 
-  // ping6.SetLocal (iic1.GetAddress (5, 0));
-  // ping6.SetRemote (iic1.GetAddress (0, 0));
-//  std::cout << "APPLICATION LAYER-----------------------------------------------" << std::endl;
-//  std::cout << "Address is " << iic1.GetAddress(1,0) <<std::endl;
-  // ping6.SetRemote (Ipv6Address::GetAllNodesMulticast ());
+  // ping6.SetLocal (iic1.GetAddress (0, 0));
+  // ping6.SetRemote (iic2.GetAddress (4, 0));
+// std::cout << "APPLICATION LAYER-----------------------------------------------" << std::endl;
+ std::cout << "Address is " << iic2.GetAddress(4,1) <<std::endl;
+//  ping6.SetRemote (Ipv6Address::GetAllNodesMulticast ());
 
   // ping6.SetAttribute ("MaxPackets", UintegerValue (maxPacketCount));
   // ping6.SetAttribute ("Interval", TimeValue (interPacketInterval));
   // ping6.SetAttribute ("PacketSize", UintegerValue (packetSize));
-  // ApplicationContainer apps = ping6.Install (c.Get (5));
-  // apps.Start (Seconds (60.0));
-  // apps.Stop (Seconds (70.0));
+  // ApplicationContainer apps = ping6.Install (root.Get (0));
+  // apps.Start (Seconds (10.0));
+  // apps.Stop (Seconds (100.0));
 
-  Simulator::Schedule (Seconds (5.0), &SetPositionZ, c.Get (0), 0.0);
-  Simulator::Schedule (Seconds (20.0), &SetPositionZ, c.Get (0), 1500.0);
+//  Simulator::Schedule (Seconds (5.0), &SetPositionZ, c.Get (0), 0.0);
+//  Simulator::Schedule (Seconds (20.0), &SetPositionZ, c.Get (0), 1500.0);
+//  Simulator::Schedule (Seconds (10), &TearDownLink, c.Get(2), c.Get(3), 1, 1);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc-line", devices);
@@ -264,6 +281,24 @@ int main (int argc, char *argv[])
                                   Seconds (1.0), &GenerateTraffic, 
                                   source, packetSize, numPackets, interPacketInterval);
 */
+
+  PacketSinkHelper sink ("ns3::UdpSocketFactory", Inet6SocketAddress (Ipv6Address::GetAny (), 9));
+  ApplicationContainer apps_sink = sink.Install (root.Get (0));
+  apps_sink.Start (Seconds (00.0));
+  apps_sink.Stop (Seconds (100.0));
+
+  OnOffHelper onoff1 ("ns3::UdpSocketFactory", Address (Inet6SocketAddress (iic1.GetAddress (0,0), 9)));
+  onoff1.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1.0]"));
+  onoff1.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0.0]"));
+  onoff1.SetAttribute ("PacketSize", UintegerValue (packetSize));
+  onoff1.SetAttribute ("DataRate", DataRateValue (DataRate (rate)));
+
+  for (uint32_t i = 4; i < 5; i++){
+    ApplicationContainer apps1 = onoff1.Install (c.Get (i));
+    apps1.Start (Seconds (30 + i));
+    apps1.Stop (Seconds (100));
+  }
+
   Simulator::Run ();
   Simulator::Destroy ();
 

@@ -555,6 +555,7 @@ private:
   Ipv6Address m_dodagId;
 };
 
+
 /*
 *  \brief (DAO-ACK Base Object) Format
    \verbatim

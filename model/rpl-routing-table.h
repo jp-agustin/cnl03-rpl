@@ -50,6 +50,17 @@ public:
 
   /**
    * \brief Constructor
+   * \param network network address
+   * \param networkPrefix network prefix
+   * \param nextHop next hop address to route the packet
+   * \param interface interface index
+   * \param prefixToUse prefix that should be used for source address for this destination
+   */
+  RplRoutingTableEntry (Ipv6Address network, Ipv6Prefix networkPrefix, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse);
+
+
+  /**
+   * \brief Constructor
    * \param network network address of the DAO sender
    * \param interface interface index
    * \param dest Ipv6 address of the destination
@@ -264,6 +275,16 @@ public:
   /**
    * \brief Add route to network.
    * \param network network address
+   * \param networkPrefix network prefix
+   * \param nextHop next hop address to route the packet.
+   * \param interface interface index
+   * \param prefixToUse prefix that should be used for source address for this destination
+   */
+  void AddNetworkRouteTo (Ipv6Address network, Ipv6Prefix networkPrefix, Ipv6Address nextHop, uint32_t interface, Ipv6Address prefixToUse);
+
+  /**
+   * \brief Add route to network.
+   * \param network network address
    * \param interface interface index
    * \param dest Destination address
    * \return true if succesful
@@ -306,6 +327,12 @@ public:
    * \return true if succesful
    */
   bool ClearRoutingTable ();
+
+  /**
+   * \brief 
+   * \param interface the interface
+   */
+  void InvalidateRoute (uint32_t interface);
 
   /**
    * \brief Prints the routing table

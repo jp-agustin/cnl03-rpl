@@ -876,10 +876,27 @@ void RplOption::Serialize (Buffer::Iterator start) const
 {
   NS_LOG_FUNCTION (this << &start);
   Buffer::Iterator i = start;
+  uint8_t flags = 0; 
+
+  if (m_flagO)
+    {
+      flags |= (uint8_t)(1 << 7);
+    }
+
+  if (m_flagR)
+    {
+      flags |= (uint8_t)(1 << 6);
+    }
+
+  if (m_flagF)
+    {
+      flags |= (uint8_t)(1 << 5);
+    }
+
 
   i.WriteU8 (GetType ());
   i.WriteU8 (GetLength ());
-  i.WriteU8 (m_flags);
+  i.WriteU8 (flags);
   i.WriteU8 (m_rplInstanceId);
   i.WriteU16 (m_senderRank);
 }

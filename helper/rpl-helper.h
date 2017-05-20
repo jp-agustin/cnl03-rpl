@@ -68,6 +68,19 @@ public:
    */
   int64_t AssignStreams (NodeContainer c, int64_t stream);
 
+  /**
+   * \brief Install a default route in the node.
+   *
+   * The traffic will be routed to the nextHop, located on the specified
+   * interface, unless a more specific route is found.
+   *
+   * \param node the node
+   * \param nextHop the next hop
+   * \param interface the network interface
+   */
+  void SetDefaultRouter (Ptr<Node> node, Ipv6Address nextHop, uint32_t interface);
+
+
 private:
   /** the factory to create RPL routing object */
   ObjectFactory m_factory;

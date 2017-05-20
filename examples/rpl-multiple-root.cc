@@ -94,6 +94,11 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
     }
 }
 
+void TearDownLink (Ptr<Node> nodeA, uint32_t interfaceA)
+{
+  nodeA->GetObject<Ipv6> ()->SetDown (interfaceA);
+}
+
 
 int main (int argc, char *argv[])
 {
@@ -130,7 +135,7 @@ int main (int argc, char *argv[])
   root.Create (2);
   // Nodes
   NodeContainer c;
-  c.Create (1);
+  c.Create (8);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -172,14 +177,21 @@ int main (int argc, char *argv[])
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   positionAlloc->Add (Vector (100.0, 50.0, 0.0));
-  positionAlloc->Add (Vector (120.0, 50.0, 0.0));
+  positionAlloc->Add (Vector (500.0, 50.0, 8000.0));
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (root);
 
   MobilityHelper mobility2;
   Ptr<ListPositionAllocator> positionAlloc2 = CreateObject<ListPositionAllocator> ();
-  positionAlloc2->Add (Vector (110.0, 70.0, 1500.0));
+  positionAlloc2->Add (Vector (200.0, 50.0, 1500.0));
+  positionAlloc2->Add (Vector (210.0, 75.0, 1500.0));
+  positionAlloc2->Add (Vector (400.0, 50.0, 6000.0));
+  positionAlloc2->Add (Vector (350.0, 80.0, 5500.0));
+  positionAlloc2->Add (Vector (300.0, 90.0, 4500.0));
+  positionAlloc2->Add (Vector (250.0, 10.0, 3000.0));
+  positionAlloc2->Add (Vector (150.0, 40.0, 1000.0));
+  positionAlloc2->Add (Vector (450.0, 30.0, 7500.0));
   mobility2.SetPositionAllocator (positionAlloc2);
   mobility2.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility2.Install (c);
@@ -242,6 +254,8 @@ int main (int argc, char *argv[])
   apps.Start (Seconds (3.0));
   apps.Stop (Seconds (10.0));
 */
+
+  //Simulator::Schedule (Seconds (50), &TearDownLink, c.Get(2), 1);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc-line", devices);

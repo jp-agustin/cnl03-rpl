@@ -116,8 +116,9 @@ public:
 
   /*
    * \brief Send scheduled DIO message
+   * \param infiniteRank Infinite rank for poisoning DIO
    */
-  void SendDio ();
+  void SendDio (uint16_t infiniteRank = 0);
 
   /*
    * \brief Send DIO message in response to DIS
@@ -137,8 +138,34 @@ public:
    * \param daoMessage DAO Message
    * \param targetOption Target Option
    * \param transitInformation Transit Information Option
+   * \param rplOption RPL Option
+   * \param senderAddress the Sender Address
+   * \param incomingInterface incoming interface
+   * \param senderPort sender port
    */
-  void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation);
+  void RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTransitInformationOption transitInformation, RplOption rplOption, Ipv6Address senderAddress, uint32_t incomingInterface, uint16_t senderPort);
+
+  /**
+   * \brief Receive DAO-ACK messages
+   * \param daoAckMessage DAO-ACK Message
+   * \param rplOption RPL Option
+   */
+  void RecvDaoAck (RplDaoAckMessage daoAckMessage, RplOption rplOption);
+
+  /**
+   * \brief Check for DAO-ACK
+   */
+  void DaoAckCheck ();
+
+  /*
+   * \brief DODAG Disjoin
+   */
+  void DodagDisjoin ();
+
+  /**
+   * \brief Reboot network
+   */
+  void Reboot ();
 
   /*
    * \brief Insert to neighborSet
@@ -180,6 +207,23 @@ public:
    */
   void TrickleTransmit ();
 
+  /**
+   * \brief Disable Trickle timer
+   */
+  void DisableTrickle ();
+
+  /**
+   * \brief Add a default route to the router through the nextHop located on interface.
+   *
+   * The default route is usually installed manually, or it is the result of
+   * some "other" routing protocol (e.g., BGP).
+   *
+   * \param nextHop the next hop
+   * \param interface the interface
+   */
+  void AddDefaultRouteTo (Ipv6Address nextHop, uint32_t interface);
+
+
   virtual void NotifyInterfaceUp (uint32_t interface);
   virtual void NotifyInterfaceDown (uint32_t interface);
   virtual void NotifyAddAddress (uint32_t interface, Ipv6InterfaceAddress address);
@@ -202,6 +246,16 @@ private:
   typedef std::map<Ptr<Socket>, uint32_t>::iterator SocketListI;
   /// Socket list type const iterator
   typedef std::map<Ptr<Socket>, uint32_t>::const_iterator SocketListCI;
+
+  /**
+   * \brief Interface address
+   */
+  Ipv6InterfaceAddress m_address;
+
+  /**
+   * \brief Network address of the node
+   */ 
+  Ipv6Address m_networkAddress;
 
   /**
    * \brief socket list
@@ -241,7 +295,7 @@ private:
   /**
    * \brief the counter
    */
-  uint8_t m_counter; //not sure sa size
+  uint8_t m_counter;
 
   /**
    * \brief the current interval size
@@ -283,6 +337,45 @@ private:
    */
   EventId m_selectParent;
 
+  /**
+   * \brief DODAG disjoin schedule event
+   */
+  EventId m_disjoin;
+
+  /**
+   * \brief Network Reboot
+   */
+  EventId m_reboot;
+
+  /**
+   * \brief Node type: 1 - root
+   */
+  bool m_isRoot;
+
+  /**
+   * \brief DAO-ACK receive
+   */
+  bool m_daoAck;
+
+  /**
+   * \brief DAO-ACK count
+   */
+  uint32_t m_daoAckCount;
+
+  /**
+   * \brief Check for DAO-ACK
+   */
+  EventId m_daoAckCheck;
+
+  /**
+   * \brief Notify node if down
+   */  
+  bool m_notifyDown;
+
+  /**
+   * \brief Rank error count
+   */
+  uint32_t m_rankErrorCount;
 
 protected:
   /**
