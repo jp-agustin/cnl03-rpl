@@ -63,7 +63,6 @@ public:
   
   /**
    * \brief from Ipv6RoutingProtocol
-   * 
    *  Query routing cache for an existing route, for an outbound packet
    */
   Ptr<Ipv6Route> RouteOutput (Ptr<Packet> p, const Ipv6Header &header, Ptr<NetDevice> oif, 
@@ -71,7 +70,6 @@ public:
   
   /**
    * \brief from Ipv6RoutingProtocol
-   *
    *  Route an input packet (to be forwarded or locally delivered)
    */
   bool RouteInput (Ptr<const Packet> p, const Ipv6Header &header, Ptr<const NetDevice> idev,
@@ -173,6 +171,7 @@ public:
    * \param dodagID DODAg ID
    * \param dtsn DTSN
    * \param rank rank
+   * \param incomingInterface incoming interface
    */
   void InsertNeighbor (Ipv6Address neighborAddress, Ipv6Address dodagID, uint8_t dtsn, uint16_t rank, uint32_t incomingInterface);
 

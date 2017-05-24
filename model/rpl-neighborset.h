@@ -24,28 +24,6 @@ public:
   ~RplNeighborSet();
 
   /**
-   * \brief Get the UID of this class.
-   * \return UID
-   */
-//  static TypeId GetTypeId ();
-
-  /**
-   * \brief Get the instance type ID.
-   * \return instance type ID
-   */
-//  virtual TypeId GetInstanceTypeId () const;
-
-  /**
-   * \brief Add neighbor to neighborlist.
-   * \param address neighbor address
-   * \param dodagId neighbor dodagId
-   * \param dtsn neighbor dtsn
-   * \param rank neighbor rank
-   * \param interface neighbor interface
-   */
-//  void AddNeighbor(Ipv6Address address, Ipv6Address dodagId, uint8_t dtsn, uint16_t rank, uint32_t interface);
-
-  /**
    * \brief Add neighbor to neighborlist.
    * \param neighbor neighbor struct.
    */
@@ -83,7 +61,6 @@ public:
    * \param rank current rank
    */
   Ptr<Neighbor> SelectParent(uint16_t rank);
-//  Ptr<Neighbor> SelectParent(uint16_t rank);
 
   /**
    * \brief get parent node in neighborlist.
@@ -98,9 +75,15 @@ public:
 
 
 private:
-  // Container for neighbors
+  
+  /**
+   * \brief Container for neighbors
+   */
   NeighborList m_neighborList;
-  // Preferred Parent
+
+  /**
+   * \brief Preferred Parent
+   */
   Ptr<Neighbor> m_prefParent;
 };
 

@@ -6,11 +6,7 @@
 #include "ns3/simple-ref-count.h"
 #include <list>
 
-namespace ns3 {
-
-  /* \ingroup rpl
-   * RPL neighbor.
-  */
+namespace ns3 { 
 
 enum neighborType {
 
@@ -43,7 +39,7 @@ public:
    * \brief Get the Neighbor dodagId.
    * \return dodagId
    */
- Ipv6Address GetDodagId(void) const;
+  Ipv6Address GetDodagId(void) const;
 
   /**
    * \brief Set the Neighbor dodagId.
@@ -56,6 +52,7 @@ public:
    * \return dtsn
    */
   uint8_t GetDtsn(void) const;
+
   /**
    * \brief Set the Neighbor dtsn.
    * \param dtsn the dtsn of the neighbor
@@ -113,19 +110,39 @@ public:
 
 private:
 
-  //mainAddress of neigbor with link to main address
+  /**
+   * \brief mainAddress of neigbor with link to main address
+   */
   Ipv6Address m_address;
-  //dodagId of neighbor
+
+  /**
+   * \brief dodagId of neighbor
+   */
   Ipv6Address m_dodagId;
-  //dtsn of neighbor
+
+  /**
+   * \brief dtsn of neighbor
+   */
   uint8_t m_dtsn;
-  //rank of neighbor
+
+  /**
+   * \brief rank of neighbor
+   */
   uint16_t m_rank;
-  //interface of neighbor
+
+  /**
+   * \brief interface of neighbor
+   */
   uint32_t m_interface;
-  //type of neighbor
+
+  /**
+   * \brief type of neighbor
+   */
   neighborType m_type;
-  //reachability
+
+  /**
+   * \brief reachability
+   */
   bool m_reachability;
 };
 
@@ -135,38 +152,4 @@ private:
 
 }
 
-
 #endif
-
-/*
-struct Neighbor : public SimpleRefCount<Neighbor>
-{
-  //mainAddress of node who has selected this as neighbor
-  //Ipv6Address m_mainAddr;
-  //mainAddress of neigbor with link to main address
-  Ipv6Address address;
-  //dodagId of neighbor
-  Ipv6Address dodagId;
-  //dtsn of neighbor
-  uint8_t dtsn;
-  //rank of neighbor
-  uint16_t rank;
-  //interface of neighbor
-  uint32_t interface;
-  //reachable neighbor
-  bool reachable;
-  //NUD number
-  //Type of neighbor
-   *
-   *(1) a node that is not in the same DODAG
-   *(2) a node that belongs to the node’s sub-DODAG (therefore with higher rank) 
-   *(3) a DODAG parent (therefore with lower rank) 
-   *(4) a DAO parent (a DODAG parent selected to send the DAOs to)
-   *(5) a preferred DODAG or DAO parent. According tothe neighbor’s kind, a different message processing is triggered.
-  /
-  neighborType type;   
-};
-*/
-
-  
-

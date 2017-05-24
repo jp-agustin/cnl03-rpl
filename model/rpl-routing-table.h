@@ -1,22 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
- *
- * Authors: John Patrick Agustin <jcagustin3@up.edu.ph>
- *          Joshua Jacinto <jhjacinto@up.edu.ph>
- */
 
 #ifndef RPL_ROUTING_TABLE_H
 #define RPL_ROUTING_TABLE_H
@@ -36,9 +17,6 @@
 
 namespace ns3 {
 
-/*
-  .h file  - yung mga kulang na fields both sa entry at dodag table 
-*/
 class RplRoutingTableEntry 
 {
 public:
@@ -70,7 +48,6 @@ public:
    * \param interface interface index
    */
   RplRoutingTableEntry (Ipv6Address dodagParent, uint32_t interface);
-
 
   /**
    * \brief Destructor
@@ -249,7 +226,7 @@ public:
 
   /**
    * \brief Destructor
-   */  // m_dioSchedule = Simulator::Schedule (m_t, &Rpl::TrickleTransmit (), this);
+   */
 
 	virtual ~RplRoutingTable ();
 
@@ -306,12 +283,6 @@ public:
    * \return true if succesful
    */
   bool ClearRoutingTable ();
-
-  /**
-   * \brief 
-   * \param interface the interface
-   */
-  void InvalidateRoute (uint32_t interface);
 
   /**
    * \brief Prints the routing table
@@ -377,13 +348,6 @@ public:
    * \return the objective code point value
    */
   uint16_t GetObjectiveCodePoint () const;
-
-  /*
-   * \param A set of DODAG parents
-   * \param A set of prefixes offered Upward along the DODAG
-   * \param Trickle timers
-   * \param List of DAO parents
-   */
 
   /*
    * \brief Set Node type

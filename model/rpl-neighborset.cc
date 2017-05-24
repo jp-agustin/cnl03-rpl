@@ -12,8 +12,6 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RplNeighborSet");
 
-//NS_OBJECT_ENSURE_REGISTERED(RplNeighborSet);
-
 bool SortByRank (const Neighbor &lhs, const Neighbor &rhs)
 {
   return lhs.GetRank() < rhs.GetRank();
@@ -22,52 +20,25 @@ bool SortByRank (const Neighbor &lhs, const Neighbor &rhs)
 
 RplNeighborSet::RplNeighborSet()
 {
-//  NS_LOG_FUNCTION(this);
 }
 
 RplNeighborSet::~RplNeighborSet()
 {
-//  NS_LOG_FUNCTION(this);
 }
-/*
-TypeId RplNeighborSet::GetTypeId ()
-{
-  static TypeId tid = TypeId ("ns3::RplNeighborSet")
-//  .SetParent<Icmpv6OptionHeader> ()
-    .SetGroupName ("Rpl")
-    .AddConstructor<RplNeighborSet> ()
-  ;
-  return tid;
-}
-
-TypeId RplNeighborSet::GetInstanceTypeId () const
-{
-//  NS_LOG_FUNCTION (this);
-  return GetTypeId ();
-}
-*/
-//void RplNeighborSet::AddNeighbor(Ipv6Address address, Ipv6Address dodagId, uint8_t dtsn, uint16d _t rank, uint32_t interface)
 
 void RplNeighborSet::AddNeighbor(Neighbor neighbor)
 {
-//  NS_LOG_FUNCTION (this << neighbor);
   m_neighborList.push_back (neighbor);
-  m_neighborList.sort(SortByRank);
-  for (NeighborList::iterator it = m_neighborList.begin ();
-       it != m_neighborList.end (); it++)
-    {
-    std::cout << "Inserted : " << it->GetNeighborAddress() << std::endl;
-  }
+  m_neighborList.sort (SortByRank);
 }
 
 void RplNeighborSet::DeleteNeighbor(Ipv6Address address)
 {
-//  NS_LOG_FUNCTION (this << address);
 
   for (NeighborList::iterator it = m_neighborList.begin ();
        it != m_neighborList.end (); it++)
     {
-      if (it->GetNeighborAddress() == address)
+      if (it->GetNeighborAddress () == address)
         {
           m_neighborList.erase (it);
           break;
@@ -79,12 +50,11 @@ void RplNeighborSet::DeleteNeighbor(Ipv6Address address)
 
 Ptr<Neighbor> RplNeighborSet::FindNeighbor (Ipv6Address address)
 {
-//  NS_LOG_FUNCTION (this << address);
   Ptr<Neighbor> neighbor = 0;
   for (NeighborList::iterator it = m_neighborList.begin ();
        it != m_neighborList.end (); it++)
     {
-      if (it->GetNeighborAddress() == address)
+      if (it->GetNeighborAddress () == address)
         {
           neighbor = (&(*it));
           return neighbor;
@@ -95,7 +65,6 @@ Ptr<Neighbor> RplNeighborSet::FindNeighbor (Ipv6Address address)
 
 void RplNeighborSet::UpdateNeighbor(Ipv6Address address, Ipv6Address dodagId, uint8_t dtsn, uint16_t rank, uint32_t interface)
 {
- // NS_LOG_FUNCTION (this << address << dodagId << dtsn << rank << interface);
   for (NeighborList::iterator it = m_neighborList.begin ();
        it != m_neighborList.end (); it++)
     {
@@ -124,11 +93,9 @@ Ptr<Neighbor> RplNeighborSet::SelectParent(uint16_t rank)
   for (NeighborList::iterator it = m_neighborList.begin ();
        it != m_neighborList.end (); it++)
     {
-      std::cout << "SelectParent ranks : " << it->GetNeighborAddress() << std::endl;
       if (it->GetReachable() && it->GetRank() < rank)
         {
           m_prefParent = &(*it);
-          std::cout << "Rank is " << m_prefParent->GetRank() << std::endl;
           return m_prefParent;
         }
     }
@@ -156,8 +123,5 @@ Ipv6Address RplNeighborSet::GetParentAddress()
   }
   return "::";
 } 
-
-
-//Add function to return number of parents in parent set.
 
 }

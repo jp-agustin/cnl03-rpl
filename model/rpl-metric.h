@@ -5,10 +5,6 @@
 
 namespace ns3 {
 
-  /* \ingroup rpl
-   * RPL neighbor.
-  */
-
 class RplMetric
 {
 public:
@@ -51,31 +47,6 @@ class RplHopCountMetric : public RplMetric
    * \param hopCount the hop count
    */
   void SetHopCount(uint8_t hopCount);
-
-  /**
-   * \brief Print informations.
-   * \param os output stream
-   */
-//  virtual void Print (std::ostream& os) const;
-
-  /**
-   * \brief Get the serialized size.
-   * \return serialized size
-   */
-//  virtual uint32_t GetSerializedSize () const;
-
-  /**
-   * \brief Serialize the packet.
-   * \param start start offset
-   */
-//  virtual void Serialize (Buffer::Iterator start) const;
-
-  /**
-   * \brief Deserialize the packet.
-   * \param start start offset
-   * \return length of packet
-   */
-//  virtual uint32_t Deserialize (Buffer::Iterator start);
 
 private:
 

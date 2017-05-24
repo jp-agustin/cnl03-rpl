@@ -221,9 +221,6 @@ uint32_t RplDioMessage::Deserialize (Buffer::Iterator start)
   i.Read (buf, 16);
   m_dodagId.Set (buf);
 
-
-  //m_options = i.ReadU8 ();
-
   return GetSerializedSize();
 }
 

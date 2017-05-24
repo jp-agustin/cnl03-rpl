@@ -1,22 +1,3 @@
-	/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
- *
- * Authors: John Patrick Agustin <jcagustin3@up.edu.ph>
- *          Joshua Jacinto <jhjacinto@up.edu.ph>
- */
 
 #define DEFAULT_STEP_OF_RANK 3
 #define MINIMUM_STEP_OF_RANK 1
@@ -37,7 +18,6 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RplObjectiveFunction");
 
-//NS_OBJECT_ENSURE_REGISTERED (Rpl);
 
 RplObjectiveFunction::RplObjectiveFunction ()
 { 
@@ -78,19 +58,9 @@ RplObjectiveFunctionMhrof::~RplObjectiveFunctionMhrof ()
 {
 }
 
-//Default, ETX is used.
 uint16_t RplObjectiveFunctionMhrof::ComputeRank (uint8_t metric)
 {
-  //Hopcount metric is forced.
   return (uint16_t)metric + 1;
-
 }
-
-/*
-uint16_t RplObjectiveFunctionMhrof::ComputeRank (uint16_t parentRank, Metric)
-{
-  return m_rank;
-}
-*/
 
 }

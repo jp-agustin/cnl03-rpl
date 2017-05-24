@@ -1,22 +1,3 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
- *
- * Authors: John Patrick Agustin <jcagustin3@up.edu.ph>
- *          Joshua Jacinto <jhjacinto@up.edu.ph>
- */
 
 #include "ns3/random-variable-stream.h"
 #include "ns3/ipv6-route.h"
@@ -28,8 +9,6 @@
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("RplRoutingTable");
-
-//NS_OBJECT_ENSURE_REGISTERED (Rpl);
 
 /*
  * RplRoutingTableEntry
@@ -46,7 +25,7 @@ RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, uint32_t interf
 }
 
 RplRoutingTableEntry::RplRoutingTableEntry (Ipv6Address network, uint32_t interface, uint16_t senderPort)
-  : m_dodagParent(network), m_dest(network), m_interface(interface), m_pathSeqNo(0), m_daoSeqNo(0), m_daoLifetime(0), 
+  : m_dodagParent(network), m_nextHop(network), m_dest(network), m_interface(interface), m_pathSeqNo(0), m_daoSeqNo(0), m_daoLifetime(0), 
     m_pathControl(0), m_retryCounter(0), m_senderPort(senderPort)
 {
 }
@@ -345,7 +324,6 @@ bool RplRoutingTable::AddNetworkRouteTo (Ipv6Address network, uint32_t interface
 
 bool RplRoutingTable::DeleteRoute (RplRoutingTableEntry *route)
 {
-  //NS_LOG_FUNCTION (this << *route);
 
   for (RoutesI it = m_routes.begin (); it != m_routes.end (); it++)
     {
@@ -356,13 +334,14 @@ bool RplRoutingTable::DeleteRoute (RplRoutingTableEntry *route)
           return true;
         }
     }
+
   NS_ABORT_MSG ("RplRoutingTable::DeleteRoute - cannot find the route to delete");
   return false;
 }
 
 bool RplRoutingTable::DeleteRoute (Ptr<Ipv6Route> route)
 {
-  //NS_LOG_FUNCTION (this << *route);
+
   Ipv6Address dest = route->GetDestination ();
 
   for (RoutesI it = m_routes.begin (); it != m_routes.end (); it++)
@@ -371,7 +350,6 @@ bool RplRoutingTable::DeleteRoute (Ptr<Ipv6Route> route)
 
       if (j->GetDest () == dest)
         {
-          // delete j;
           m_routes.erase (it);
           return true;
         }
@@ -386,6 +364,7 @@ bool RplRoutingTable::ClearRoutingTable ()
     {
       delete j->first;
     }
+
   m_routes.clear();
   
   SetRplInstanceId (0);
@@ -397,17 +376,6 @@ bool RplRoutingTable::ClearRoutingTable ()
   SetDtsn (0);
 
   return true;
-}
-
-void RplRoutingTable::InvalidateRoute (uint32_t interface)
-{
-  for (RoutesI it = m_routes.begin (); it != m_routes.end (); it++)
-    {
-      if (it->first->GetInterface () == interface)
-        {
-          //DeleteRoute (it->first);
-        }
-    }
 }
 
 void RplRoutingTable::PrintRoutingTable ()

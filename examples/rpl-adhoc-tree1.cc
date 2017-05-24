@@ -1,21 +1,3 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2009 The Boeing Company
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -60,6 +42,10 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
     }
 }
 
+void TearDownLink (Ptr<Node> nodeA, uint32_t interfaceA)
+{
+  nodeA->GetObject<Ipv6> ()->SetDown (interfaceA);
+}
 
 int main (int argc, char *argv[])
 {
@@ -94,9 +80,8 @@ int main (int argc, char *argv[])
   // Multiple roots
   NodeContainer root;
   root.Create (1);
-  // Nodes
   NodeContainer c;
-  c.Create (5);
+  c.Create (7);
 
   WifiHelper wifi;
   if (verbose)
@@ -106,7 +91,11 @@ int main (int argc, char *argv[])
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
   YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
+
+  // set it to zero; otherwise, gain will be added
   wifiPhy.Set ("RxGain", DoubleValue (0) ); 
+
+  // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
   wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO); 
 
   YansWifiChannelHelper wifiChannel;
@@ -120,6 +109,7 @@ int main (int argc, char *argv[])
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
                                 "DataMode",StringValue (phyMode),
                                 "ControlMode",StringValue (phyMode));
+  
   // Set it to adhoc mode
   wifiMac.SetType ("ns3::AdhocWifiMac");
   NetDeviceContainer devicesR = wifi.Install (wifiPhy, wifiMac, root);
@@ -127,18 +117,20 @@ int main (int argc, char *argv[])
 
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-  positionAlloc->Add (Vector (100.0, 50.0, 0.0));
+  positionAlloc->Add (Vector (100.0, 20.0, 0.0));
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (root);
 
   MobilityHelper mobility2;
   Ptr<ListPositionAllocator> positionAlloc2 = CreateObject<ListPositionAllocator> ();
-  positionAlloc2->Add (Vector (120.0, 50.0, 1500.0));
-  positionAlloc2->Add (Vector (140.0, 50.0, 3000.0));
-  positionAlloc2->Add (Vector (160.0, 50.0, 4500.0));
-  positionAlloc2->Add (Vector (180.0, 50.0, 6000.0));
-  positionAlloc2->Add (Vector (200.0, 50.0, 7500.0));
+  positionAlloc2->Add (Vector (40.0, 80.0, 1050.0));
+  positionAlloc2->Add (Vector (90.0, 70.0, 1650.0));
+  positionAlloc2->Add (Vector (150.0, 90.0, 1650.0));
+  positionAlloc2->Add (Vector (0.0, 120.0, 2200.0));
+  positionAlloc2->Add (Vector (75.0, 130.0, 2200.0));
+  positionAlloc2->Add (Vector (130.0, 160.0, 2700.0));
+  positionAlloc2->Add (Vector (160.0, 150.0, 3400.0));
   mobility2.SetPositionAllocator (positionAlloc2);
   mobility2.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility2.Install (c);
@@ -160,8 +152,10 @@ int main (int argc, char *argv[])
   iic1.SetForwarding (0, true);
   iic2.SetForwarding (0, true);
 
+  //Simulator::Schedule (Seconds (100), &TearDownLink, c.Get(1), 1);
+
   // Tracing
-  wifiPhy.EnablePcap ("rpl-adhoc-line", devices);
+  wifiPhy.EnablePcap ("rpl-adhoc", devices);
 
   // Output what we are doing
   NS_LOG_UNCOND ("Testing " << numPackets  << " packets sent with receiver rss " << rss );
@@ -171,4 +165,3 @@ int main (int argc, char *argv[])
 
   return 0;
 }
-
