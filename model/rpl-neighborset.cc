@@ -46,8 +46,6 @@ void RplNeighborSet::DeleteNeighbor(Ipv6Address address)
     }
 }
 
-
-
 Ptr<Neighbor> RplNeighborSet::FindNeighbor (Ipv6Address address)
 {
   Ptr<Neighbor> neighbor = 0;
@@ -127,6 +125,27 @@ Ipv6Address RplNeighborSet::GetParentAddress()
 void RplNeighborSet::ClearParent()
 {
   m_prefParent = NULL;
+}
+
+NeighborList RplNeighborSet::GetParentList(uint16_t rank)
+{
+  Neighbor neighbor;
+  for (NeighborList::iterator it = m_neighborList.begin ();
+       it != m_neighborList.end (); it++)
+    {
+      if (it->GetRank () == rank)
+        {
+          neighbor = *it;
+          m_parentList.push_back (neighbor);
+        }
+    }
+
+  return m_parentList;
+}
+
+void RplNeighborSet::ClearParentList()
+{
+  m_parentList.clear();
 }
 
 }

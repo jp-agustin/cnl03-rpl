@@ -77,7 +77,16 @@ public:
    */
   void ClearParent ();
 
+  /**
+   * \brief Get parent list
+   * \param rank parent rank
+   */
+  NeighborList GetParentList (uint16_t rank);
 
+  /**
+   * \brief Clear parent list
+   */
+  void ClearParentList ();
 
 private:
   
@@ -90,6 +99,11 @@ private:
    * \brief Preferred Parent
    */
   Ptr<Neighbor> m_prefParent;
+
+  /**
+   * \brief Container for parents
+   */
+  NeighborList m_parentList;
 };
 
 

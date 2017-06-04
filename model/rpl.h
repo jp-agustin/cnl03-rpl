@@ -364,6 +364,11 @@ private:
    */
   uint32_t m_rankErrorCount;
 
+  /**
+   * \brief Container for parents
+   */
+  NeighborList m_parentList;
+
 protected:
   /**
    * \brief Dispose this object.

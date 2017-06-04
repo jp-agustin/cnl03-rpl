@@ -42,7 +42,7 @@
 #define INFINITE_RANK 0xffff
 #define ROOT_ADDRESS "2001:1::"
 
-#define MOP 1
+#define MOP 3
 #define OCP 0
 #define reboot 0
 
@@ -783,7 +783,7 @@ void Rpl::SendDao ()
         }
     }
 
-  if (MOP == 1 || MOP == 2) //Non-storing and Storing mode
+  if (MOP != 0) //Non-storing and Storing mode
     {
       targetOption.SetPrefixLength (networkMask.GetPrefixLength ());
       targetOption.SetTargetPrefix (m_networkAddress);
@@ -807,7 +807,21 @@ void Rpl::SendDao ()
 
       if (!m_notifyDown)
         {
-          sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParentAddress (), 521));
+          if (MOP == 3)
+            {
+              m_neighborSet.ClearParentList ();
+              m_parentList = m_neighborSet.GetParentList (m_neighborSet.GetParent()->GetRank ());
+
+              for (NeighborList::iterator it = m_parentList.begin ();
+                   it != m_parentList.end (); it++)
+                {
+                  sendingSocket->SendTo (p, 0, Inet6SocketAddress (it->GetNeighborAddress (), 521));
+                }
+            }
+          else
+            {
+              sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParentAddress (), 521));
+            }
         }
       else 
         {
@@ -885,7 +899,7 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
           rplOptionDao.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
           rplOptionDao.SetSenderRank (m_routingTable.GetRank ());
 
-          if (MOP == 2)
+          if (MOP == 2 || MOP == 3)
             {
               if ((uint32_t)daoMessage.GetRplInstanceId () == (uint32_t)m_routingTable.GetRplInstanceId () && daoMessage.GetDodagId () == m_routingTable.GetDodagId ())
                 {
@@ -905,7 +919,18 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
                   p->AddHeader (daoMessage);
                   p->AddHeader (dao);
 
-                  sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParentAddress (), 521));
+                  if (MOP == 2)
+                    {
+                      sendingSocket->SendTo (p, 0, Inet6SocketAddress (m_neighborSet.GetParentAddress (), 521));
+                    }
+                  else
+                    {
+                      for (NeighborList::iterator it = m_parentList.begin ();
+                           it != m_parentList.end (); it++)
+                        {
+                          sendingSocket->SendTo (p, 0, Inet6SocketAddress (it->GetNeighborAddress (), 521));
+                        }
+                    }
      
                 }
               else
@@ -956,7 +981,7 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
             if (!m_notifyDown)
               {
                 std::cout << "Sending DAO-ACK to: " << senderAddress << std::endl;
-                if (MOP == 2)
+                if (MOP == 2 || MOP == 3)
                   {
                     sendingSocket->SendTo (packet, 0, Inet6SocketAddress (senderAddress, senderPort));
                   }
