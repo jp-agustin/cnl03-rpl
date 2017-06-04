@@ -124,4 +124,9 @@ Ipv6Address RplNeighborSet::GetParentAddress()
   return "::";
 } 
 
+void RplNeighborSet::ClearParent()
+{
+  m_prefParent = NULL;
+}
+
 }

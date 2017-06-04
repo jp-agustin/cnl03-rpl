@@ -18,7 +18,7 @@
  *          Joshua Jacinto <jhjacinto@up.edu.ph>
  */
 
-#define DEFAULT_DIO_INTERVAL_DOUBLINGS 20
+#define DEFAULT_DIO_INTERVAL_DOUBLINGS 16
 #define DEFAULT_DIO_INTERVAL_MIN 3
 #define DEFAULT_DIO_REDUNDANCY_CONSTANT 10
 
@@ -42,7 +42,7 @@
 #define INFINITE_RANK 0xffff
 #define ROOT_ADDRESS "2001:1::"
 
-#define MOP 3
+#define MOP 1
 #define OCP 0
 #define reboot 0
 
@@ -383,7 +383,7 @@ void Rpl::Receive (Ptr<Socket> socket)
 
 void Rpl::Join ()
 {
-  std::cout << "Joining network: " << std::endl;
+  std::cout << "Joining network: " << m_networkAddress << std::endl;
   m_dioReceived = 1;
   SendMulticastDis ();
 }
@@ -708,7 +708,7 @@ void Rpl::SendDio (uint16_t rank)
       SocketListI iter = m_sendSocketList.begin ();
       sendingSocket = iter->first;
 
-      if (m_notifyDown == false)
+      if (!m_notifyDown)
         {
           sendingSocket->SendTo (p, 0, Inet6SocketAddress (ALL_RPL_NODES, RPL_PORT));
         }
@@ -733,7 +733,7 @@ void Rpl::SendDao ()
       m_daoAckCheck.Cancel ();
     }
 
-  if (MOP == 3)
+  if (MOP != 0)
     {
       Time daoAckCheck = Seconds (2);                          
       m_daoAckCheck = Simulator::Schedule (daoAckCheck, &Rpl::DaoAckCheck, this);
@@ -929,38 +929,57 @@ void Rpl::RecvDao (RplDaoMessage daoMessage, RplTargetOption targetOption, RplTr
             }
         }
 
-        if (MOP == 3)
+        
+        if ((uint32_t) daoMessage.GetFlags () == 128)
           {
-            if ((uint32_t) daoMessage.GetFlags () == 128)
+            Ptr<Packet> packet = Create<Packet>();
+            RplDaoAckMessage daoAckMessage;
+
+            Icmpv6Header daoAck;
+            daoAck.SetType (155);
+            daoAck.SetCode (3);
+
+            daoAckMessage.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
+            daoAckMessage.SetDodagId (m_routingTable.GetDodagId ());
+
+            RplOption rplOptionDaoAck;
+            rplOptionDaoAck.SetFlagO (1);
+            rplOptionDaoAck.SetFlagR (0);
+            rplOptionDaoAck.SetFlagF (0);
+            rplOptionDaoAck.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
+            rplOptionDaoAck.SetSenderRank (m_routingTable.GetRank ());
+
+            packet->AddHeader(rplOptionDaoAck);
+            packet->AddHeader(daoAckMessage);
+            packet->AddHeader(daoAck);
+            
+            if (!m_notifyDown)
               {
-                Ptr<Packet> packet = Create<Packet>();
-                RplDaoAckMessage daoAckMessage;
-
-                Icmpv6Header daoAck;
-                daoAck.SetType (155);
-                daoAck.SetCode (3);
-
-                daoAckMessage.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
-                daoAckMessage.SetDodagId (m_routingTable.GetDodagId ());
-
-                RplOption rplOptionDaoAck;
-                rplOptionDaoAck.SetFlagO (1);
-                rplOptionDaoAck.SetFlagR (0);
-                rplOptionDaoAck.SetFlagF (0);
-                rplOptionDaoAck.SetRplInstanceId (m_routingTable.GetRplInstanceId ());
-                rplOptionDaoAck.SetSenderRank (m_routingTable.GetRank ());
-
-                packet->AddHeader(rplOptionDaoAck);
-                packet->AddHeader(daoAckMessage);
-                packet->AddHeader(daoAck);
-                
-                if (!m_notifyDown)
+                std::cout << "Sending DAO-ACK to: " << senderAddress << std::endl;
+                if (MOP == 3)
                   {
-                    std::cout << "Sending DAO-ACK to: " << senderAddress << std::endl;
                     sendingSocket->SendTo (packet, 0, Inet6SocketAddress (senderAddress, senderPort));
                   }
-              }            
-          }
+                else if (MOP == 1)
+                  {
+                    m_routingTable.AddNetworkRouteTo (senderAddress, incomingInterface, senderPort);
+                    sendingSocket->SendTo (packet, 0, Inet6SocketAddress (senderAddress, senderPort));
+
+                    Ptr<Ipv6Route> rtentry = 0;
+                    rtentry = m_routingTable.Lookup (senderAddress);
+
+                    if (rtentry)
+                      { 
+                        m_routingTable.DeleteRoute (rtentry);
+                      }
+                  }
+                else
+                  {
+                    std::cout << "DAO-ACK not supported" << std::endl;
+                  }
+              }
+          }            
+
     }
   else
     {
@@ -979,7 +998,7 @@ void Rpl::RecvDaoAck (RplDaoAckMessage daoAckMessage, RplOption rplOption)
   if ((uint32_t)rplOption.GetFlags () == 128 && (m_routingTable.GetRank ()) > rplOption.GetSenderRank ())
     {
       m_daoAck = true;
-      std::cout << "Received DAO-ACK" << std::endl;
+      std::cout << "Received DAO-ACK from: " << m_neighborSet.GetParentAddress() << std::endl;
     }
   else
     {
@@ -1015,9 +1034,30 @@ void Rpl::DaoAckCheck ()
   if (m_daoAckCount == 0)
     {
       DisableTrickle ();
-      m_routingTable.ClearRoutingTable ();
-            
-      Join ();
+      
+      Ptr<Ipv6Route> rtentry = 0;
+      rtentry = m_routingTable.Lookup (m_neighborSet.GetParentAddress ());
+
+      if (rtentry)
+        { 
+          m_routingTable.DeleteRoute (rtentry);
+        }
+
+      m_neighborSet.DeleteNeighbor (m_neighborSet.GetParentAddress ());
+      m_neighborSet.ClearParent ();
+
+      SelectParent ();
+
+      if (m_neighborSet.GetParent ())
+        {
+          ResetTrickle ();
+        }
+      else
+        {
+          m_routingTable.ClearRoutingTable ();
+          Join ();
+        }
+
       m_daoAckCount = 3;
       m_daoAck = false;
     }

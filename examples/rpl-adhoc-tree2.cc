@@ -171,7 +171,7 @@ int main (int argc, char *argv[])
   iic1.SetForwarding (0, true);
   iic2.SetForwarding (0, true);
 
-  //Simulator::Schedule (Seconds (100), &TearDownLink, c.Get(2), c.Get(3), 1, 1);
+  //Simulator::Schedule (Seconds (100), &TearDownLink, c.Get(0), 1);
 
   // Tracing
   wifiPhy.EnablePcap ("rpl-adhoc-line", devices);

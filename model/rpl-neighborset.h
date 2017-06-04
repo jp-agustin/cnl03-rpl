@@ -72,6 +72,11 @@ public:
    */
   Ipv6Address GetParentAddress();
 
+  /**
+   * \brief Clear preferred parent
+   */
+  void ClearParent ();
+
 
 
 private:
