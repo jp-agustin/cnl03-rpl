@@ -90,17 +90,17 @@ public:
 
 private:
   
-  /**
+  /*
    * \brief Container for neighbors
    */
   NeighborList m_neighborList;
 
-  /**
+  /*
    * \brief Preferred Parent
    */
   Ptr<Neighbor> m_prefParent;
 
-  /**
+  /*
    * \brief Container for parents
    */
   NeighborList m_parentList;

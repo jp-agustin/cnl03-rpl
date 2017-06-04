@@ -379,6 +379,7 @@ protected:
    * Start protocol operation
    */
   void DoInitialize ();
+  
 };
 
 }

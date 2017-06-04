@@ -130,6 +130,7 @@ void RplNeighborSet::ClearParent()
 NeighborList RplNeighborSet::GetParentList(uint16_t rank)
 {
   Neighbor neighbor;
+  
   for (NeighborList::iterator it = m_neighborList.begin ();
        it != m_neighborList.end (); it++)
     {

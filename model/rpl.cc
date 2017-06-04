@@ -1246,7 +1246,6 @@ void Rpl::DoDispose ()
   NS_LOG_FUNCTION (this);
 
   std::cout << "----------------------\n\n";
-
   std::cout << "Node: " << m_networkAddress << "\n";
   m_routingTable.PrintRoutingTable ();
   std::cout << "Rank: " << m_routingTable.GetRank () << "\n";
